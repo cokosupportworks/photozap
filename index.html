@@ -378,7 +378,7 @@
                     const lfh = new Uint8Array(30 + nameLen);
                     const lfhView = new DataView(lfh.buffer);
                     lfhView.setUint32(0, 0x04034b50, true); // Signature
-                    lfhView.setUint16(4, 10, true);         // Version
+                    lfhView.setUint16(4, 20, true);         // ★修正: Version needed (20 = MS-DOS 2.0)
                     lfhView.setUint16(6, 0x0800, true);     // Flags (Bit 11 = UTF-8)
                     lfhView.setUint16(8, 0, true);          // Compression (0 = Store)
                     lfhView.setUint16(10, file.dosTime, true); // Last mod file time
@@ -396,8 +396,8 @@
                     const cdh = new Uint8Array(46 + nameLen);
                     const cdhView = new DataView(cdh.buffer);
                     cdhView.setUint32(0, 0x02014b50, true); // Signature
-                    cdhView.setUint16(4, 10, true);         // Version made by
-                    cdhView.setUint16(6, 10, true);         // Version needed
+                    cdhView.setUint16(4, 20, true);         // ★修正: Version made by (20 = MS-DOS)
+                    cdhView.setUint16(6, 20, true);         // ★修正: Version needed
                     cdhView.setUint16(8, 0x0800, true);     // Flags (Bit 11 = UTF-8)
                     cdhView.setUint16(10, 0, true);         // Compression
                     cdhView.setUint16(12, file.dosTime, true); // Last mod file time
@@ -406,6 +406,7 @@
                     cdhView.setUint32(20, dataLen, true);   // Comp size
                     cdhView.setUint32(24, dataLen, true);   // Uncomp size
                     cdhView.setUint16(28, nameLen, true);   // Name length
+                    cdhView.setUint32(38, 0x00000020, true); // ★追加: External file attributes (0x20 = 標準のアーカイブファイルとして認識させる)
                     cdhView.setUint32(42, offset, true);    // Offset
                     cdh.set(nameBytes, 46);
 
