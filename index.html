@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>photoZAP|写真データをまとめて軽量化！</title>
+    <title>photoZAP</title>
     <link rel="icon" href="apple-touch-icon.png">
     <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <style>
-        /* --- デザイン設定 (完全オフライン用) --- */
+        /* --- デザイン設定 --- */
         :root {
             --primary: #FF6B8B;
             --secondary: #4ECDC4;
@@ -16,421 +16,454 @@
             --text-gray: #777777;
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
             background-color: #e2e8f0;
-            margin: 0;
-            padding: 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
+            box-sizing: border-box;
         }
 
+        /* 2カラムレイアウトのコンテナ設定 */
         .app-container {
             background-color: white;
-            border-radius: 24px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 600px;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            border: 4px solid white;
         }
 
+        .left-panel {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-panel {
+            width: 100%;
+            background-color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- レスポンシブ (画面幅800px以上でPCレイアウトに) --- */
+        @media (max-width: 799px) {
+            body { padding: 0; align-items: flex-start; }
+            .app-container { min-height: 100vh; }
+            .right-panel { padding-bottom: 50px; border-top: 4px solid #edf2f7; }
+        }
+
+        @media (min-width: 800px) {
+            body { padding: 20px; }
+            .app-container {
+                flex-direction: row;
+                max-width: 1200px;
+                height: 95vh;
+                max-height: 900px;
+                border-radius: 24px;
+                border: 4px solid white;
+            }
+            .left-panel {
+                width: 450px;
+                flex-shrink: 0;
+                height: 100%;
+                overflow-y: auto;
+                border-right: 2px solid #edf2f7;
+            }
+            .right-panel {
+                flex-grow: 1;
+                height: 100%;
+                overflow: hidden; /* 中身のエリアでスクロールさせるため */
+            }
+        }
+
+        /* --- 左パネル（設定エリア）のスタイル --- */
         .header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             text-align: center;
             color: white;
-            padding: 0; /* ロゴ画像がぴったり収まるように余白をなくす */
-            line-height: 0; /* 画像の下にできる不要な隙間を消す */
+            padding: 0;
+            line-height: 0;
+            flex-shrink: 0;
         }
-
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-        }
-        .header span {
-            display: block;
-            font-size: 16px;
-            margin-top: 5px;
-        }
-
-        .content {
-            padding: 25px;
-        }
-
+        .content { padding: 15px; flex-grow: 1; }
         .section-box {
             background-color: var(--bg-light);
             border: 2px solid #edf2f7;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
         }
-
         .section-title {
-            font-weight: bold;
-            color: var(--text-dark);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            font-weight: bold; color: var(--text-dark); margin-bottom: 6px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-
-        label {
-            color: var(--text-dark);
-            font-size: 14px;
-            font-weight: bold;
-        }
-
+        label { color: var(--text-dark); font-size: 13px; font-weight: bold; }
         input[type="number"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            width: 80px;
-            text-align: center;
-            font-size: 14px;
+            padding: 4px; border: 1px solid #ccc; border-radius: 6px; width: 70px; text-align: center; font-size: 13px;
         }
-        input[type="number"]:disabled {
-            background-color: #e2e8f0;
-            color: #a0aec0;
-        }
-
-        .note {
-            font-size: 11px;
-            color: var(--text-gray);
-            margin-top: 10px;
-            line-height: 1.4;
-        }
+        input[type="number"]:disabled { background-color: #e2e8f0; color: #a0aec0; }
+        .note { font-size: 11px; color: var(--text-gray); margin-top: 4px; line-height: 1.3; }
 
         /* カスタムトグルスイッチ */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
+        .toggle-switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider.size-toggle { background-color: var(--secondary); }
         input:checked + .slider.data-toggle { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(26px); }
-
-        .options-group {
-            margin-top: 10px;
-            padding-left: 10px;
-            transition: opacity 0.3s;
-        }
-        .options-group.disabled {
-            opacity: 0.4;
-            pointer-events: none;
-        }
+        input:checked + .slider:before { transform: translateX(20px); }
         
-        .radio-line {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        .options-group { margin-top: 6px; padding-left: 10px; transition: opacity 0.3s; }
+        .options-group.disabled { opacity: 0.4; pointer-events: none; }
+        .radio-line { margin-bottom: 4px; display: flex; align-items: center; gap: 8px; font-size: 13px; }
+        input[type="file"] { margin-top: 4px; font-size: 12px; }
 
-        /* ファイル入力のデザイン */
-        input[type="file"] {
-            margin-top: 10px;
-            font-size: 14px;
+        /* 新設: KBショートカットボタン */
+        .kb-btn {
+            background-color: white; border: 1px solid #cbd5e0; border-radius: 12px; padding: 4px 8px; font-size: 11px; color: var(--text-dark); cursor: pointer; transition: all 0.2s;
         }
+        .kb-btn:hover { background-color: #edf2f7; border-color: var(--primary); color: var(--primary); }
 
-        /* 実行ボタン */
+        /* 実行ボタン関連 */
         .zap-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 18px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 107, 139, 0.4);
-            transition: all 0.2s;
+            background-color: var(--primary); color: white; border: none; width: 100%; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 24px; cursor: pointer; box-shadow: 0 4px 10px rgba(255, 107, 139, 0.4); transition: all 0.2s; margin-top: 5px;
         }
-        .zap-btn:hover {
-            background-color: #ff4a70;
-            transform: translateY(-2px);
-        }
-        .zap-btn:disabled {
-            background-color: #ccc;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
+        .zap-btn:hover { background-color: #ff4a70; transform: translateY(-2px); }
+        .zap-btn:disabled { background-color: #ccc; box-shadow: none; cursor: not-allowed; transform: none; }
+        
+        .progress-container { display: none; margin-top: 15px; }
+        .progress-texts { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+        .progress-bar-bg { background-color: #edf2f7; border-radius: 10px; height: 10px; overflow: hidden; }
+        .progress-bar-fill { background-color: var(--secondary); height: 100%; width: 0%; transition: width 0.3s; }
+        
+        .log-area { display: none; margin-top: 15px; }
+        .log-area textarea { width: 95%; height: 80px; background-color: #2d3748; color: #48bb78; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; border: none; resize: none; }
 
-        /* プログレスバー */
-        .progress-container {
-            display: none;
-            margin-top: 20px;
-        }
-        .progress-texts {
+        .preview-header {
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 1px solid #edf2f7;
             display: flex;
             justify-content: space-between;
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--text-dark);
-            margin-bottom: 5px;
+            align-items: center;
+            flex-shrink: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            z-index: 10;
         }
-        .progress-bar-bg {
-            background-color: #edf2f7;
-            border-radius: 10px;
-            height: 12px;
-            overflow: hidden;
+        
+        .selection-status { font-weight: bold; color: var(--text-dark); font-size: 15px; }
+        
+        .btn-small {
+            background-color: white; border: 2px solid #cbd5e0; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s; color: var(--text-dark);
         }
-        .progress-bar-fill {
-            background-color: var(--secondary);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
+        .btn-small:hover { background-color: #edf2f7; border-color: #a0aec0; }
+        
+        .thumbnail-area {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .thumbnail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 15px;
+            align-content: start;
         }
 
-        /* ログエリア */
-        .log-area {
-            display: none;
-            margin-top: 20px;
+        .thumb-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 4px solid transparent;
+            transition: all 0.15s;
+            aspect-ratio: 1 / 1;
+            background-color: #e2e8f0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .log-area textarea {
-            width: 95%;
-            height: 100px;
-            background-color: #2d3748;
-            color: #48bb78;
-            border-radius: 8px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 11px;
-            border: none;
-            resize: none;
+        .thumb-item:hover { transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.15); }
+        .thumb-item.selected { border-color: var(--secondary); }
+        
+        .thumb-item img {
+            width: 100%; height: 100%; object-fit: cover;
         }
+        
+        .thumb-checkbox {
+            position: absolute; top: 8px; left: 8px; width: 22px; height: 22px; pointer-events: none;
+            accent-color: var(--secondary);
+            background-color: white; border-radius: 4px; box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .thumb-enlarge {
+            position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 14px; backdrop-filter: blur(2px);
+        }
+        .thumb-enlarge:hover { background: rgba(255, 107, 139, 0.9); transform: scale(1.1); }
+        
+        .thumb-info {
+            position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; padding: 4px; text-align: center; backdrop-filter: blur(2px); display: flex; flex-direction: column; justify-content: center;
+        }
+        .thumb-name {
+            font-size: 10px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+        }
+        .thumb-meta {
+            font-size: 9px; color: #cbd5e0; white-space: nowrap;
+        }
+
+        /* --- モーダル（ヘルプ・画像拡大） --- */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.7); z-index: 2000; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background-color: white; border-radius: 16px; width: 100%; max-width: 550px; max-height: 85vh; overflow-y: auto; padding: 25px; box-shadow: 0 15px 30px rgba(0,0,0,0.3); position: relative;
+        }
+        .modal-close {
+            position: absolute; top: 15px; right: 15px; font-size: 28px; font-weight: bold; cursor: pointer; color: #a0aec0; background: none; border: none; padding: 0; line-height: 1; transition: color 0.2s;
+        }
+        .modal-close:hover { color: #4a5568; }
+        
+        .help-btn-container { text-align: center; margin-bottom: 15px; }
+        .help-btn {
+            background-color: white; color: var(--text-dark); border: 2px solid #cbd5e0; padding: 8px 16px; border-radius: 30px; font-weight: bold; font-size: 13px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); width: 100%; justify-content: center;
+        }
+        .help-btn:hover { background-color: #f7fafc; border-color: var(--secondary); color: var(--secondary); transform: translateY(-2px); box-shadow: 0 6px 10px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <!-- ヘッダー -->
-        <div class="header">
-            <img src="logo.png" alt="PHOTOZAP" width="600" height="110" style="width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto;">
+        
+        <!-- === 左パネル（操作・設定エリア） === -->
+        <div class="left-panel">
+            <!-- ヘッダー -->
+            <div class="header">
+                <img src="logo.png" alt="photoZAP" width="600" height="110" style="width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display:none; padding:20px; font-size:24px; font-weight:bold;">⚡ photoZAP</div>
+            </div>
+
+            <div class="content">
+                <!-- 使い方ボタン -->
+                <div class="help-btn-container">
+                    <button id="openHelpBtn" class="help-btn">💡 photoZAPの使い方（クリックで開く）</button>
+                </div>
+
+                <!-- 画像選択エリア -->
+                <div class="section-box">
+                    <label>📁 変換する画像を選択:</label><br>
+                    
+                    <div style="margin-top: 6px; padding: 8px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; font-weight: bold; color: var(--text-dark); margin-bottom: 2px;">📱 スマホ・PC (写真を選択)</div>
+                        <input type="file" id="fileInput" multiple accept="image/jpeg, image/png, image/webp" style="margin-top: 0;">
+                    </div>
+
+                    <div style="margin-top: 6px; padding: 8px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
+                        <div style="font-size: 11px; font-weight: bold; color: var(--text-dark); margin-bottom: 2px;">💻 PC専用 (フォルダごと選択)</div>
+                        <input type="file" id="folderInput" webkitdirectory directory multiple style="margin-top: 0;">
+                    </div>
+                </div>
+
+                <!-- サイズ指定エリア -->
+                <div class="section-box">
+                    <div class="section-title">
+                        <span>📐 サイズを指定する</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleSize">
+                            <span class="slider size-toggle"></span>
+                        </label>
+                    </div>
+
+                    <div id="sizeOptions" class="options-group disabled">
+                        <div class="radio-line">
+                            <input type="radio" name="sizeMode" value="longEdge" id="radioLongEdge" checked>
+                            <label for="radioLongEdge">長辺を合わせる (px):</label>
+                            <input type="number" id="longEdgeValue" value="1000">
+                        </div>
+                        <div class="radio-line">
+                            <input type="radio" name="sizeMode" value="percent" id="radioPercent">
+                            <label for="radioPercent">縮小率 (%):</label>
+                            <input type="number" id="percentValue" value="50" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- データ量指定エリア -->
+                <div class="section-box">
+                    <div class="section-title">
+                        <span>🗜️ データ量を指定する</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleData" checked>
+                            <span class="slider data-toggle"></span>
+                        </label>
+                    </div>
+
+                    <div id="dataOptions" class="options-group">
+                        <div class="radio-line">
+                            <label>目標サイズ (KB):</label>
+                            <input type="number" id="targetKbValue" value="1000">
+                        </div>
+                        <div style="display: flex; gap: 6px; margin-top: 6px; margin-bottom: 6px;">
+                            <button type="button" class="kb-btn" onclick="document.getElementById('targetKbValue').value=200">200KB</button>
+                            <button type="button" class="kb-btn" onclick="document.getElementById('targetKbValue').value=500">500KB</button>
+                            <button type="button" class="kb-btn" onclick="document.getElementById('targetKbValue').value=1000">1MB (1000KB)</button>
+                        </div>
+                        <div class="note">
+                            ※PNGは自動的に背景白のJPEGに変換されます。<br>
+                            ※指定サイズに収まらない場合は自動でピクセル数を削ります。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 実行ボタン -->
+                <button id="startBtn" class="zap-btn">画像を選択してください</button>
+                <div class="note" style="text-align: center; color: var(--primary);">※ブラウザの「ダウンロード」フォルダに保存されます。</div>
+
+                <!-- プログレスバー -->
+                <div id="progressArea" class="progress-container">
+                    <div class="progress-texts">
+                        <span id="statusText">準備中...</span>
+                        <span id="progressText">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="progressBar" class="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <!-- ログ表示エリア -->
+                <div id="logArea" class="log-area">
+                    <label style="font-size: 12px;">📝 処理ログ:</label><br>
+                    <textarea id="logConsole" readonly></textarea>
+                </div>
+                
+                <!-- フッター -->
+                <div style="margin-top: 20px; font-size: 11px; color: var(--text-gray); text-align: center;">
+                    2026 ココサポートワークス
+                </div>
+            </div>
         </div>
 
-        <div class="content">
+        <!-- === 右パネル（画像プレビュー・選択エリア） === -->
+        <div class="right-panel">
             
-            <!-- 画像選択エリア -->
-            <div class="section-box">
-                <label>📁 変換する画像を選択:</label><br>
+            <!-- 初期状態の案内メッセージ -->
+            <div id="rightPanelEmpty" style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100%; color:#a0aec0; text-align:center; padding: 20px;">
+                <div style="font-size:64px; margin-bottom:10px;">🖼️</div>
+                <p style="font-weight:bold; font-size:18px; margin:0;">プレビューエリア</p>
+                <p style="font-size:13px; margin-top:10px;">左側のパネルで画像を選ぶと、<br>ここに一覧が表示されます。<br><br>不要な画像はタップして変換から外せます。</p>
+            </div>
+
+            <!-- 画像読み込み後のエリア -->
+            <div id="rightPanelContent" style="display:none; flex-direction:column; height:100%;">
                 
-                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 12px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">📱 スマホ・PC (写真を選択)</div>
-                    <input type="file" id="fileInput" multiple accept="image/jpeg, image/png, image/webp" style="margin-top: 0;">
-                </div>
-
-                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 12px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">💻 PC専用 (フォルダごと選択できます)</div>
-                    <input type="file" id="folderInput" webkitdirectory directory multiple style="margin-top: 0;">
-                </div>
-
-                <div class="note" id="fileCountDisplay" style="margin-top: 15px; font-weight: bold; font-size: 13px; color: var(--primary);">未選択</div>
-            </div>
-
-            <!-- サイズ指定エリア -->
-            <div class="section-box">
-                <div class="section-title">
-                    <span>📐 サイズを指定する</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleSize">
-                        <span class="slider size-toggle"></span>
-                    </label>
-                </div>
-
-                <div id="sizeOptions" class="options-group disabled">
-                    <div class="radio-line">
-                        <input type="radio" name="sizeMode" value="longEdge" id="radioLongEdge" checked>
-                        <label for="radioLongEdge">長辺を合わせる (px):</label>
-                        <input type="number" id="longEdgeValue" value="1000">
-                    </div>
-                    <div class="radio-line">
-                        <input type="radio" name="sizeMode" value="percent" id="radioPercent">
-                        <label for="radioPercent">縮小率 (%):</label>
-                        <input type="number" id="percentValue" value="50" disabled>
+                <!-- 一括操作ヘッダー -->
+                <div class="preview-header">
+                    <div id="selectionStatus" class="selection-status">0枚中、0枚を選択中</div>
+                    <div style="display:flex; gap:10px;">
+                        <button id="btnSelectAll" class="btn-small">すべて選択</button>
+                        <button id="btnDeselectAll" class="btn-small">すべて解除</button>
                     </div>
                 </div>
-            </div>
-
-            <!-- データ量指定エリア -->
-            <div class="section-box">
-                <div class="section-title">
-                    <span>🗜️ データ量を指定する</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleData" checked>
-                        <span class="slider data-toggle"></span>
-                    </label>
-                </div>
-
-                <div id="dataOptions" class="options-group">
-                    <div class="radio-line">
-                        <label>目標サイズ (KB):</label>
-                        <input type="number" id="targetKbValue" value="200">
-                    </div>
-                    <div class="note">
-                        ※PNGは自動的に背景白のJPEGに変換されます。<br>
-                        ※指定サイズに収まらない場合は自動でピクセル数を削ります。
+                
+                <!-- サムネイル一覧 -->
+                <div class="thumbnail-area">
+                    <div id="thumbnailContainer" class="thumbnail-grid">
+                        <!-- ここに画像が動的に入る -->
                     </div>
                 </div>
-            </div>
-
-            <!-- 実行ボタン -->
-            <button id="startBtn" class="zap-btn">ZAP! (ZIPで一括保存)</button>
-            
-
-            <!-- プログレスバー -->
-            <div id="progressArea" class="progress-container">
-                <div class="progress-texts">
-                    <span id="statusText">準備中...</span>
-                    <span id="progressText">0%</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div id="progressBar" class="progress-bar-fill"></div>
-                </div>
-            </div>
-
-            <!-- ログ表示エリア -->
-            <div id="logArea" class="log-area">
-                <label style="font-size: 12px;">📝 処理ログ:</label><br>
-                <textarea id="logConsole" readonly></textarea>
             </div>
 
         </div>
     </div>
 
-    <div style="margin-top: 15px; font-size: 12px; color: var(--text-gray);">
-        2026 ココサポートワークス
+    <!-- ヘルプモーダル -->
+    <div id="helpModal" class="modal-overlay">
+        <div class="modal-content">
+            <button id="closeHelpBtn" class="modal-close">&times;</button>
+            <div style="font-size: 22px; font-weight: 900; color: var(--primary); margin-bottom: 20px; text-align: center; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;">💡 photoZAPの使い方</div>
+            
+            <div style="margin-bottom: 20px;">
+                <h3 style="font-size: 16px; color: var(--text-dark); background-color: #edf2f7; padding: 8px 12px; border-radius: 8px; margin: 10px 0;">1️⃣ 基本の流れ</h3>
+                <p style="font-size: 14px; margin: 8px 0;">画像のサイズやデータ量を一括で小さくするツールです。</p>
+                <ol style="font-size: 14px; margin: 8px 0 8px 15px;">
+                    <li style="margin-bottom:6px;"><strong>選択:</strong> 変換したい画像、またはフォルダを選びます。<br><span style="color:var(--secondary); font-weight:bold;">★右側に表示される画像一覧から、不要な写真のチェックを外せます。</span></li>
+                    <li style="margin-bottom:6px;"><strong>設定:</strong> 小さくしたいサイズやデータ量（KB）を決めます。</li>
+                    <li style="margin-bottom:6px;"><strong>実行:</strong> 「ZAP!」ボタンを押すと一斉に変換が始まります。</li>
+                </ol>
+            </div>
+
+            <div style="background-color: #fff5f5; border: 2px solid #feb2b2; padding: 15px; border-radius: 12px; margin-bottom: 20px;">
+                <h3 style="color: #c53030; margin-top: 0; padding: 0; font-size: 18px;">⚠️【重要】毎回「保存しますか？」と聞かれる場合</h3>
+                <p style="font-weight:bold; color:#c53030; font-size: 14px; margin: 8px 0;">Edgeブラウザをお使いの場合、画像1枚ごとに確認画面が出てしまうことがあります。快適に使うために以下の設定をしてください。</p>
+                <ol style="font-size: 14px; color:#c53030; margin: 8px 0 8px 15px;">
+                    <li style="margin-bottom:6px;">画面右上の <strong>「…」</strong> をクリックし、<strong>「設定」</strong> を開く。</li>
+                    <li style="margin-bottom:6px;">左側のメニューから <strong>「ダウンロード」</strong> を選ぶ。</li>
+                    <li style="margin-bottom:6px;"><strong>「各ファイルの保存先を毎回確認する」</strong> を <strong>オフ</strong> にする。</li>
+                </ol>
+                <p style="font-size:13px; color:#c53030; margin-top:10px; font-weight:bold;">※これをオフにすると、何十枚あってもボタン1つで一瞬で保存されるようになります！</p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="closeHelpBtnBottom" class="help-btn" style="background-color: var(--primary); color: white; border: none;">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 画像拡大用モーダル -->
+    <div id="lightboxModal" class="modal-overlay">
+        <div style="position:relative; width:90%; height:90%; display:flex; justify-content:center; align-items:center;">
+            <button id="closeLightboxBtn" class="modal-close" style="color:white; font-size:40px; top:0; right:0; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">&times;</button>
+            <img id="lightboxImg" src="" style="max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        </div>
+    </div>
+
+    <!-- メッセージ用モーダル -->
+    <div id="messageModal" class="modal-overlay">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div id="messageModalTitle" style="font-size: 20px; font-weight: 900; color: var(--primary); margin-bottom: 15px; border-bottom: 2px solid #edf2f7; padding-bottom: 10px;">お知らせ</div>
+            <div id="messageModalText" style="font-size: 14px; color: var(--text-dark); margin-bottom: 20px; line-height: 1.5; font-weight: bold;"></div>
+            <button id="closeMessageBtn" class="zap-btn" style="padding: 10px; font-size: 14px;">OK</button>
+        </div>
     </div>
 
     <script>
-        // --- 独自実装: 軽量・完全オフラインZIPジェネレーター ---
-        // 外部ライブラリを読み込めない環境のため、プログラム内でZIPファイル(無圧縮)を生成します。
-        class SimpleOfflineZip {
-            constructor() {
-                this.files = [];
-                this.crcTable = new Uint32Array(256);
-                for (let n = 0; n < 256; n++) {
-                    let c = n;
-                    for (let k = 0; k < 8; k++) { c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); }
-                    this.crcTable[n] = c;
-                }
-            }
+        // --- モーダル制御 ---
+        const helpModal = document.getElementById('helpModal');
+        document.getElementById('openHelpBtn').onclick = () => helpModal.style.display = 'flex';
+        const closeHelp = () => helpModal.style.display = 'none';
+        document.getElementById('closeHelpBtn').onclick = closeHelp;
+        document.getElementById('closeHelpBtnBottom').onclick = closeHelp;
+        
+        const lightboxModal = document.getElementById('lightboxModal');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const openLightbox = (url) => { lightboxImg.src = url; lightboxModal.style.display = 'flex'; };
+        document.getElementById('closeLightboxBtn').onclick = () => lightboxModal.style.display = 'none';
+        
+        // 背景クリックでモーダルを閉じる
+        window.onclick = (e) => {
+            if (e.target === helpModal) closeHelp();
+            if (e.target === lightboxModal) lightboxModal.style.display = 'none';
+            if (e.target === messageModal) messageModal.style.display = 'none';
+        };
 
-            crc32(uint8Array) {
-                let crc = 0xFFFFFFFF;
-                for (let i = 0; i < uint8Array.length; i++) {
-                    crc = (crc >>> 8) ^ this.crcTable[(crc ^ uint8Array[i]) & 0xFF];
-                }
-                return (crc ^ 0xFFFFFFFF) >>> 0;
-            }
-
-            addFile(name, uint8Array, date = new Date()) {
-                // ZIP(MS-DOS)形式のタイムスタンプに変換して保持
-                const dosTime = (date.getSeconds() >> 1) | (date.getMinutes() << 5) | (date.getHours() << 11);
-                const dosDate = date.getDate() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9);
-                this.files.push({ name: name, data: uint8Array, dosTime: dosTime, dosDate: dosDate });
-            }
-
-            generateBlob() {
-                let zipData = [];
-                let centralDirectory = [];
-                let offset = 0;
-                const encoder = new TextEncoder(); // 日本語ファイル名対応(UTF-8)
-
-                for (const file of this.files) {
-                    const nameBytes = encoder.encode(file.name);
-                    const nameLen = nameBytes.length;
-                    const dataLen = file.data.length;
-                    const crc = this.crc32(file.data);
-
-                    // Local File Header
-                    const lfh = new Uint8Array(30 + nameLen);
-                    const lfhView = new DataView(lfh.buffer);
-                    lfhView.setUint32(0, 0x04034b50, true); // Signature
-                    lfhView.setUint16(4, 20, true);         // ★修正: Version needed (20 = MS-DOS 2.0)
-                    lfhView.setUint16(6, 0x0800, true);     // Flags (Bit 11 = UTF-8)
-                    lfhView.setUint16(8, 0, true);          // Compression (0 = Store)
-                    lfhView.setUint16(10, file.dosTime, true); // Last mod file time
-                    lfhView.setUint16(12, file.dosDate, true); // Last mod file date
-                    lfhView.setUint32(14, crc, true);       // CRC32
-                    lfhView.setUint32(18, dataLen, true);   // Comp size
-                    lfhView.setUint32(22, dataLen, true);   // Uncomp size
-                    lfhView.setUint16(26, nameLen, true);   // Name length
-                    lfh.set(nameBytes, 30);
-                    
-                    zipData.push(lfh);
-                    zipData.push(file.data);
-
-                    // Central Directory Header
-                    const cdh = new Uint8Array(46 + nameLen);
-                    const cdhView = new DataView(cdh.buffer);
-                    cdhView.setUint32(0, 0x02014b50, true); // Signature
-                    cdhView.setUint16(4, 20, true);         // ★修正: Version made by (20 = MS-DOS)
-                    cdhView.setUint16(6, 20, true);         // ★修正: Version needed
-                    cdhView.setUint16(8, 0x0800, true);     // Flags (Bit 11 = UTF-8)
-                    cdhView.setUint16(10, 0, true);         // Compression
-                    cdhView.setUint16(12, file.dosTime, true); // Last mod file time
-                    cdhView.setUint16(14, file.dosDate, true); // Last mod file date
-                    cdhView.setUint32(16, crc, true);       // CRC32
-                    cdhView.setUint32(20, dataLen, true);   // Comp size
-                    cdhView.setUint32(24, dataLen, true);   // Uncomp size
-                    cdhView.setUint16(28, nameLen, true);   // Name length
-                    cdhView.setUint32(38, 0x00000020, true); // ★追加: External file attributes (0x20 = 標準のアーカイブファイルとして認識させる)
-                    cdhView.setUint32(42, offset, true);    // Offset
-                    cdh.set(nameBytes, 46);
-
-                    centralDirectory.push(cdh);
-                    offset += lfh.length + dataLen;
-                }
-
-                const cdSize = centralDirectory.reduce((acc, val) => acc + val.length, 0);
-
-                // End of Central Directory Record
-                const eocd = new Uint8Array(22);
-                const eocdView = new DataView(eocd.buffer);
-                eocdView.setUint32(0, 0x06054b50, true); // Signature
-                eocdView.setUint16(8, this.files.length, true); // Total records
-                eocdView.setUint16(10, this.files.length, true); 
-                eocdView.setUint32(12, cdSize, true);    // CD Size
-                eocdView.setUint32(16, offset, true);    // CD Offset
-
-                return new Blob([...zipData, ...centralDirectory, eocd], { type: 'application/zip' });
-            }
+        const messageModal = document.getElementById('messageModal');
+        const messageModalTitle = document.getElementById('messageModalTitle');
+        const messageModalText = document.getElementById('messageModalText');
+        function showMessage(title, text) {
+            messageModalTitle.textContent = title;
+            messageModalText.innerHTML = text;
+            messageModal.style.display = 'flex';
         }
-        // -----------------------------------------------------------
+        document.getElementById('closeMessageBtn').onclick = () => messageModal.style.display = 'none';
 
-        // UIの要素を取得
+        // --- 設定エリアのトグル制御 ---
         const toggleSize = document.getElementById('toggleSize');
         const sizeOptions = document.getElementById('sizeOptions');
         const radioLongEdge = document.getElementById('radioLongEdge');
@@ -440,72 +473,162 @@
 
         const toggleData = document.getElementById('toggleData');
         const dataOptions = document.getElementById('dataOptions');
-        const targetKbValue = document.getElementById('targetKbValue');
+
+        toggleSize.onchange = (e) => e.target.checked ? sizeOptions.classList.remove('disabled') : sizeOptions.classList.add('disabled');
+        toggleData.onchange = (e) => e.target.checked ? dataOptions.classList.remove('disabled') : dataOptions.classList.add('disabled');
+
+        const updateRadios = () => {
+            longEdgeInput.disabled = !radioLongEdge.checked;
+            percentInput.disabled = !radioPercent.checked;
+        };
+        radioLongEdge.onchange = updateRadios;
+        radioPercent.onchange = updateRadios;
+
+        // --- 状態管理 (State) ---
+        let appState = {
+            files: [] // { file: File, objectUrl: string, selected: boolean, folderName: string }
+        };
 
         const fileInput = document.getElementById('fileInput');
         const folderInput = document.getElementById('folderInput');
-        const fileCountDisplay = document.getElementById('fileCountDisplay');
+        const thumbnailContainer = document.getElementById('thumbnailContainer');
 
-        // トグルの動き
-        toggleSize.addEventListener('change', (e) => {
-            if(e.target.checked) sizeOptions.classList.remove('disabled');
-            else sizeOptions.classList.add('disabled');
-        });
-
-        toggleData.addEventListener('change', (e) => {
-            if(e.target.checked) dataOptions.classList.remove('disabled');
-            else dataOptions.classList.add('disabled');
-        });
-
-        // ラジオボタンの動き
-        const updateRadios = () => {
-            if (radioLongEdge.checked) {
-                longEdgeInput.disabled = false;
-                percentInput.disabled = true;
-            } else {
-                longEdgeInput.disabled = true;
-                percentInput.disabled = false;
-            }
-        };
-        radioLongEdge.addEventListener('change', updateRadios);
-        radioPercent.addEventListener('change', updateRadios);
-
-        // ファイル/フォルダ選択時の処理
-        let targetFiles = [];
-        
-        function handleFileSelect(e) {
-            const files = Array.from(e.target.files);
-            const validExts = ['image/jpeg', 'image/png', 'image/webp'];
-            targetFiles = files.filter(file => validExts.includes(file.type));
-            fileCountDisplay.textContent = `JPEG/PNG/WebPファイル: ${targetFiles.length}枚 見つかりました`;
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
         }
 
-        fileInput.addEventListener('change', (e) => {
-            folderInput.value = ""; // もう一方をリセット
-            handleFileSelect(e);
-        });
+        function handleFileSelect(e) {
+            // 前回のプレビュー用メモリを解放（ブラウザクラッシュ防止）
+            appState.files.forEach(f => URL.revokeObjectURL(f.objectUrl));
+            
+            const files = Array.from(e.target.files);
+            const validExts = ['image/jpeg', 'image/png', 'image/webp'];
+            
+            let folderNameStr = "";
+            if (files.length > 0 && files[0].webkitRelativePath) {
+                const parts = files[0].webkitRelativePath.split('/');
+                if (parts.length > 1) folderNameStr = parts[0]; 
+            }
+            
+            // 隠しファイルを除外し、状態オブジェクトを生成
+            appState.files = files.filter(file => {
+                if (!validExts.includes(file.type)) return false;
+                const name = file.name.toLowerCase();
+                if (name.startsWith('.') || name === 'desktop.ini' || name === 'thumbs.db') return false;
+                return true;
+            }).map(file => ({
+                file: file,
+                objectUrl: URL.createObjectURL(file), // 高速プレビュー用のURL
+                selected: true, // 初期状態はすべて選択
+                folderName: folderNameStr,
+                formattedSize: formatBytes(file.size) // データ量の計算結果を保存
+            }));
+            
+            renderThumbnails();
+        }
 
-        folderInput.addEventListener('change', (e) => {
-            fileInput.value = ""; // もう一方をリセット
-            handleFileSelect(e);
-        });
+        fileInput.onchange = (e) => { folderInput.value = ""; handleFileSelect(e); };
+        folderInput.onchange = (e) => { fileInput.value = ""; handleFileSelect(e); };
 
-        // ログ機能
+        // サムネイルの描画
+        function renderThumbnails() {
+            const emptyArea = document.getElementById('rightPanelEmpty');
+            const contentArea = document.getElementById('rightPanelContent');
+            
+            thumbnailContainer.innerHTML = '';
+            
+            if (appState.files.length === 0) {
+                emptyArea.style.display = 'flex';
+                contentArea.style.display = 'none';
+                updateSelectionStatus();
+                return;
+            }
+            
+            emptyArea.style.display = 'none';
+            contentArea.style.display = 'flex';
+            
+            appState.files.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = `thumb-item ${item.selected ? 'selected' : ''}`;
+                
+                // サムネイル全体タップで選択/解除
+                div.onclick = (e) => {
+                    // 虫眼鏡アイコンをタップした場合は拡大のみ
+                    if(e.target.closest('.thumb-enlarge')) {
+                        openLightbox(item.objectUrl);
+                        return;
+                    }
+                    item.selected = !item.selected;
+                    div.className = `thumb-item ${item.selected ? 'selected' : ''}`;
+                    div.querySelector('.thumb-checkbox').checked = item.selected;
+                    updateSelectionStatus();
+                };
+                
+                div.innerHTML = `
+                    <img src="${item.objectUrl}" alt="thumbnail" loading="lazy">
+                    <input type="checkbox" class="thumb-checkbox" ${item.selected ? 'checked' : ''}>
+                    <div class="thumb-enlarge" title="拡大表示">🔍</div>
+                    <div class="thumb-info">
+                        <div class="thumb-name">${item.file.name}</div>
+                        <div id="meta-${index}" class="thumb-meta">読込中... | ${item.formattedSize}</div>
+                    </div>
+                `;
+                thumbnailContainer.appendChild(div);
+
+                // ピクセル数の非同期取得（画面フリーズを避けるため裏で測る）
+                if (!item.width || !item.height) {
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        item.width = tempImg.width;
+                        item.height = tempImg.height;
+                        const metaEl = document.getElementById(`meta-${index}`);
+                        if (metaEl) metaEl.textContent = `${tempImg.width}×${tempImg.height} | ${item.formattedSize}`;
+                    };
+                    tempImg.src = item.objectUrl;
+                } else {
+                    const metaEl = document.getElementById(`meta-${index}`);
+                    if (metaEl) metaEl.textContent = `${item.width}×${item.height} | ${item.formattedSize}`;
+                }
+            });
+            
+            updateSelectionStatus();
+        }
+
+        // 一括選択・解除ボタン
+        document.getElementById('btnSelectAll').onclick = () => {
+            appState.files.forEach(f => f.selected = true);
+            renderThumbnails();
+        };
+        document.getElementById('btnDeselectAll').onclick = () => {
+            appState.files.forEach(f => f.selected = false);
+            renderThumbnails();
+        };
+
+        function updateSelectionStatus() {
+            const selectedCount = appState.files.filter(f => f.selected).length;
+            const totalCount = appState.files.length;
+            document.getElementById('selectionStatus').textContent = `${totalCount}枚中、${selectedCount}枚を選択中`;
+            
+            const startBtn = document.getElementById('startBtn');
+            if(selectedCount === 0) {
+                startBtn.disabled = true;
+                startBtn.textContent = totalCount === 0 ? "画像を選択してください" : "変換する画像がありません";
+            } else {
+                startBtn.disabled = false;
+                startBtn.textContent = "ZAP! (連続ダウンロード開始)";
+            }
+        }
+
         const logConsole = document.getElementById('logConsole');
         function addLog(message, isError = false) {
             const time = new Date().toLocaleTimeString();
-            const prefix = isError ? "[ERROR]" : "[INFO]";
-            logConsole.value += `${time} ${prefix} ${message}\n`;
+            logConsole.value += `${time} ${isError ? "[ERROR]" : "[INFO]"} ${message}\n`;
             logConsole.scrollTop = logConsole.scrollHeight;
         }
-
-        // --- コアの画像処理 ---
-        const startBtn = document.getElementById('startBtn');
-        const progressArea = document.getElementById('progressArea');
-        const logArea = document.getElementById('logArea');
-        const statusText = document.getElementById('statusText');
-        const progressText = document.getElementById('progressText');
-        const progressBar = document.getElementById('progressBar');
 
         function readFileAsDataURL(file) {
             return new Promise((resolve, reject) => {
@@ -525,43 +648,52 @@
             });
         }
 
-        function getBase64Size(base64Str) {
-            const str = base64Str.split(',')[1];
-            return atob(str).length;
+        // --- Blob変換（メモリ節約用） ---
+        function canvasToBlobAsync(canvas, format, quality) {
+            return new Promise(resolve => {
+                canvas.toBlob(resolve, format, quality);
+            });
         }
 
-        function dataUrlToUint8Array(dataUrl) {
-            const base64Str = dataUrl.split(',')[1];
-            const binaryStr = atob(base64Str);
-            const len = binaryStr.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryStr.charCodeAt(i);
-            }
-            return bytes;
+        function downloadImage(url, filename) {
+            return new Promise(resolve => {
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(resolve, 400); // 連続ダウンロード負荷軽減 (Mac対策で少し長め)
+            });
         }
 
-        // 次のUI描画を待つための関数（フリーズ防止）
-        function yieldToMain() {
-            return new Promise(resolve => setTimeout(resolve, 0));
-        }
+        function yieldToMain() { return new Promise(resolve => setTimeout(resolve, 0)); }
 
-        startBtn.addEventListener('click', async () => {
-            if (targetFiles.length === 0) {
-                alert("フォルダを選択してください。");
-                return;
-            }
+        const startBtn = document.getElementById('startBtn');
+        const progressArea = document.getElementById('progressArea');
+        const logArea = document.getElementById('logArea');
+        const statusText = document.getElementById('statusText');
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+
+        startBtn.onclick = async () => {
+            // 選ばれた画像だけを抽出
+            const filesToProcess = appState.files.filter(f => f.selected);
+            
+            if (filesToProcess.length === 0) return;
             if (!toggleSize.checked && !toggleData.checked) {
-                alert("サイズ指定かデータ量指定のどちらかを有効にしてください。");
+                showMessage("設定エラー", "サイズ指定かデータ量指定のどちらかを有効にしてください。");
                 return;
             }
 
-            // 初期化
+            // UIの初期化
             startBtn.disabled = true;
+            document.getElementById('btnSelectAll').disabled = true;
+            document.getElementById('btnDeselectAll').disabled = true;
             progressArea.style.display = 'block';
             logArea.style.display = 'block';
             logConsole.value = "";
-            addLog("=== PHOTOZAP 処理開始 ===");
+            addLog("=== photoZAP 処理開始 ===");
 
             let successCount = 0;
             let errorCount = 0;
@@ -569,31 +701,20 @@
             const useSize = toggleSize.checked;
             const useData = toggleData.checked;
             const isLongEdge = radioLongEdge.checked;
-            const longEdge = parseInt(longEdgeInput.value);
-            const percent = parseInt(percentInput.value) / 100;
-            const targetBytes = parseFloat(targetKbValue.value) * 1024;
+            const longEdge = parseInt(document.getElementById('longEdgeValue').value);
+            const percent = parseInt(document.getElementById('percentValue').value) / 100;
+            const targetBytes = parseFloat(document.getElementById('targetKbValue').value) * 1024;
 
-            // フォルダ名の取得（PCでの「フォルダごと選択」用）
-            let folderName = "";
-            if (targetFiles.length > 0 && targetFiles[0].webkitRelativePath) {
-                const parts = targetFiles[0].webkitRelativePath.split('/');
-                if (parts.length > 1) {
-                    folderName = parts[0]; // 最初のスラッシュより前の文字（＝フォルダ名）を取得
-                }
-            }
-
-            // ZIPジェネレーターを準備
-            const myZip = new SimpleOfflineZip();
-
-            for (let i = 0; i < targetFiles.length; i++) {
-                const file = targetFiles[i];
+            for (let i = 0; i < filesToProcess.length; i++) {
+                const fileItem = filesToProcess[i];
+                const file = fileItem.file;
                 
-                // UI更新
-                statusText.textContent = `${i + 1} / ${targetFiles.length} 枚目を処理中...`;
-                const progress = Math.round(((i) / targetFiles.length) * 100);
+                // UI進捗更新
+                statusText.textContent = `${i + 1} / ${filesToProcess.length} 枚目を処理中...`;
+                const progress = Math.round(((i) / filesToProcess.length) * 100);
                 progressBar.style.width = `${progress}%`;
                 progressText.textContent = `${progress}%`;
-                await yieldToMain(); // 画面を更新させる
+                await yieldToMain(); // ブラウザフリーズ防止
 
                 try {
                     const dataUrl = await readFileAsDataURL(file);
@@ -605,29 +726,22 @@
                     let w = img.width;
                     let h = img.height;
 
-                    // 1. サイズ変更
+                    // 1. サイズ変更処理
                     if (useSize) {
                         if (isLongEdge) {
-                            if (w > h) {
-                                h = Math.round(h * (longEdge / w));
-                                w = longEdge;
-                            } else {
-                                w = Math.round(w * (longEdge / h));
-                                h = longEdge;
-                            }
+                            if (w > h) { h = Math.round(h * (longEdge / w)); w = longEdge; }
+                            else { w = Math.round(w * (longEdge / h)); h = longEdge; }
                         } else {
-                            w = Math.round(w * percent);
-                            h = Math.round(h * percent);
+                            w = Math.round(w * percent); h = Math.round(h * percent);
                         }
                     }
 
                     canvas.width = w;
                     canvas.height = h;
 
-                    // 形式決定
+                    // 形式の決定（PNG等はJPEGへ変換）
                     let outFormat = file.type;
                     let outExt = file.name.substring(file.name.lastIndexOf('.'));
-                    
                     if (useData && (file.type === 'image/png' || file.type === 'image/webp')) {
                         outFormat = 'image/jpeg';
                         outExt = '.jpg';
@@ -639,57 +753,60 @@
                     }
                     ctx.drawImage(img, 0, 0, w, h);
 
-                    let finalDataUrl;
+                    let finalBlob;
 
-                    // 2. データ量指定（圧縮）
+                    // 2. データ量圧縮処理 (Blobを使ってメモリを節約)
                     if (useData) {
                         let quality = 0.95;
                         while (true) {
-                            finalDataUrl = canvas.toDataURL(outFormat, quality);
-                            let currentSize = getBase64Size(finalDataUrl);
+                            finalBlob = await canvasToBlobAsync(canvas, outFormat, quality);
+                            let currentSize = finalBlob.size;
 
                             if (currentSize <= targetBytes || quality <= 0.1) {
                                 if (currentSize > targetBytes) {
-                                    // フェイルセーフ：ピクセル数を10%削る
+                                    // 限界突破フェイルセーフ：ピクセル数を削る
                                     if (canvas.width < 10 || canvas.height < 10) throw new Error("限界まで縮小しました");
-                                    
                                     let newW = Math.floor(canvas.width * 0.9);
                                     let newH = Math.floor(canvas.height * 0.9);
                                     let tempCanvas = document.createElement('canvas');
-                                    tempCanvas.width = newW;
-                                    tempCanvas.height = newH;
+                                    tempCanvas.width = newW; tempCanvas.height = newH;
                                     let tempCtx = tempCanvas.getContext('2d');
-                                    
-                                    if (outFormat === 'image/jpeg') {
-                                        tempCtx.fillStyle = '#FFFFFF';
-                                        tempCtx.fillRect(0, 0, newW, newH);
-                                    }
+                                    if (outFormat === 'image/jpeg') { tempCtx.fillStyle = '#FFFFFF'; tempCtx.fillRect(0, 0, newW, newH); }
                                     tempCtx.drawImage(canvas, 0, 0, newW, newH);
+                                    // 古いキャンバスのメモリを解放
+                                    canvas.width = 0; canvas.height = 0;
                                     canvas = tempCanvas;
                                     quality = 0.85; 
                                     continue;
-                                } else {
-                                    break;
-                                }
+                                } else { break; }
                             }
                             quality -= 0.05;
                         }
                     } else {
-                        finalDataUrl = canvas.toDataURL(outFormat, 0.92);
+                        finalBlob = await canvasToBlobAsync(canvas, outFormat, 0.92);
                     }
 
-                    // ファイル名の設定
+                    // 保存用ファイル名の作成
                     let fileName = file.name;
                     if (outExt !== file.name.substring(file.name.lastIndexOf('.'))) {
                         fileName = file.name.substring(0, file.name.lastIndexOf('.')) + outExt;
                     }
+                    if (fileItem.folderName) {
+                        fileName = `${fileItem.folderName}_${fileName}`;
+                    } else {
+                        fileName = `photoZAP_${fileName}`;
+                    }
 
-                    // ZIPにファイルを追加（★元のファイルの更新日時を引き継ぐ）
-                    const fileBytes = dataUrlToUint8Array(finalDataUrl);
-                    myZip.addFile(fileName, fileBytes, new Date(file.lastModified));
+                    // ブラウザ標準機能でダウンロード
+                    const blobUrl = URL.createObjectURL(finalBlob);
+                    await downloadImage(blobUrl, fileName);
+                    URL.revokeObjectURL(blobUrl); // 即座にメモリ解放
+                    
+                    // 使い終わったキャンバスのメモリを解放
+                    canvas.width = 0; canvas.height = 0;
                     
                     successCount++;
-                    addLog(`[成功] ${fileName} をZIPに追加しました`);
+                    addLog(`[成功] ${fileName} を保存しました`);
 
                 } catch (error) {
                     errorCount++;
@@ -697,58 +814,23 @@
                 }
             }
 
-            // 全処理完了後、ZIPを作成して1回だけダウンロード
-            statusText.textContent = "ZIPファイルを作成中...";
-            progressBar.style.width = `99%`;
-            progressText.textContent = `99%`;
-            await yieldToMain();
-
-            try {
-                const zipBlob = myZip.generateBlob();
-                const downloadLink = document.createElement('a');
-                downloadLink.href = URL.createObjectURL(zipBlob);
-                
-                // ZIPファイル名の決定（パターンA or パターンB）
-                let zipFileName = "";
-                if (folderName) {
-                    // パターンA: フォルダごと選択した場合は「フォルダ名_photoZAP.zip」
-                    zipFileName = `${folderName}_photoZAP.zip`;
-                } else {
-                    // パターンB: 写真のみ選択した場合は日時（今まで通り）
-                    const now = new Date();
-                    const yyyy = now.getFullYear();
-                    const MM = String(now.getMonth() + 1).padStart(2, '0');
-                    const dd = String(now.getDate()).padStart(2, '0');
-                    const HH = String(now.getHours()).padStart(2, '0');
-                    const mm = String(now.getMinutes()).padStart(2, '0');
-                    const ss = String(now.getSeconds()).padStart(2, '0');
-                    zipFileName = `photoZAP_${yyyy}${MM}${dd}_${HH}-${mm}-${ss}.zip`;
-                }
-                
-                downloadLink.download = zipFileName;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                
-                progressBar.style.width = `100%`;
-                progressText.textContent = `100%`;
-                statusText.textContent = "処理完了！ZIPファイルをダウンロードしました。";
-                addLog("=== 処理完了 ===");
-                addLog(`成功: ${successCount} 件, 失敗: ${errorCount} 件`);
-                
-                if (errorCount > 0) {
-                    alert(`完了しましたが、${errorCount}件のエラーがあります。ログを確認してください。`);
-                } else {
-                    alert(`完了しました！画像はZIPファイルにまとめられてダウンロードされました。`);
-                }
-            } catch (e) {
-                statusText.textContent = "ZIPファイルの作成に失敗しました。";
-                addLog(`[重大なエラー] ZIP作成失敗: ${e.message}`, true);
-            }
-
+            // 完了処理
+            progressBar.style.width = `100%`;
+            progressText.textContent = `100%`;
+            statusText.textContent = "処理完了！";
+            addLog("=== 処理完了 ===");
+            addLog(`成功: ${successCount} 件, 失敗: ${errorCount} 件`);
+            
             startBtn.disabled = false;
-        });
+            document.getElementById('btnSelectAll').disabled = false;
+            document.getElementById('btnDeselectAll').disabled = false;
+            
+            if (errorCount > 0) {
+                showMessage("完了（エラーあり）", `完了しましたが、${errorCount}件のエラーがあります。<br>左下のログを確認してください。`);
+            } else {
+                showMessage("変換完了！", `画像の変換が完了しました！<br>ブラウザの「ダウンロード」フォルダをご確認ください。`);
+            }
+        };
     </script>
-    
 </body>
 </html>
