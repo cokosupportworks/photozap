@@ -3,752 +3,663 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>photoZAP|写真データをまとめて軽量化！</title>
-    <link rel="icon" href="apple-touch-icon.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>photoZAP</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+　<link rel="icon" href="apple-touch-icon.png">
+   <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
     <style>
-        /* --- デザイン設定 (完全オフライン用) --- */
-        :root {
-            --primary: #FF6B8B;
-            --secondary: #4ECDC4;
-            --bg-light: #F7F9FC;
-            --text-dark: #333333;
-            --text-gray: #777777;
-        }
-
-        body {
-            font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
-            background-color: #e2e8f0;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .app-container {
-            background-color: white;
-            border-radius: 24px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 600px;
-            overflow: hidden;
-            border: 4px solid white;
-        }
-
-        .header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            text-align: center;
-            color: white;
-            padding: 0; /* ロゴ画像がぴったり収まるように余白をなくす */
-            line-height: 0; /* 画像の下にできる不要な隙間を消す */
-        }
-
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 2px;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
-        }
-        .header span {
-            display: block;
-            font-size: 16px;
-            margin-top: 5px;
-        }
-
-        .content {
-            padding: 25px;
-        }
-
-        .section-box {
-            background-color: var(--bg-light);
-            border: 2px solid #edf2f7;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-weight: bold;
-            color: var(--text-dark);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        label {
-            color: var(--text-dark);
-            font-size: 14px;
-            font-weight: bold;
-        }
-
-        input[type="number"] {
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            width: 80px;
-            text-align: center;
-            font-size: 14px;
-        }
-        input[type="number"]:disabled {
-            background-color: #e2e8f0;
-            color: #a0aec0;
-        }
-
-        .note {
-            font-size: 11px;
-            color: var(--text-gray);
-            margin-top: 10px;
-            line-height: 1.4;
-        }
-
-        /* カスタムトグルスイッチ */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider.size-toggle { background-color: var(--secondary); }
-        input:checked + .slider.data-toggle { background-color: var(--primary); }
-        input:checked + .slider:before { transform: translateX(26px); }
-
-        .options-group {
-            margin-top: 10px;
-            padding-left: 10px;
-            transition: opacity 0.3s;
-        }
-        .options-group.disabled {
-            opacity: 0.4;
-            pointer-events: none;
-        }
-        
-        .radio-line {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* ファイル入力のデザイン */
-        input[type="file"] {
-            margin-top: 10px;
-            font-size: 14px;
-        }
-
-        /* 実行ボタン */
-        .zap-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 18px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 107, 139, 0.4);
-            transition: all 0.2s;
-        }
-        .zap-btn:hover {
-            background-color: #ff4a70;
-            transform: translateY(-2px);
-        }
-        .zap-btn:disabled {
-            background-color: #ccc;
-            box-shadow: none;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        /* プログレスバー */
-        .progress-container {
-            display: none;
-            margin-top: 20px;
-        }
-        .progress-texts {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            font-weight: bold;
-            color: var(--text-dark);
-            margin-bottom: 5px;
-        }
-        .progress-bar-bg {
-            background-color: #edf2f7;
-            border-radius: 10px;
-            height: 12px;
-            overflow: hidden;
-        }
-        .progress-bar-fill {
-            background-color: var(--secondary);
-            height: 100%;
-            width: 0%;
-            transition: width 0.3s;
-        }
-
-        /* ログエリア */
-        .log-area {
-            display: none;
-            margin-top: 20px;
-        }
-        .log-area textarea {
-            width: 95%;
-            height: 100px;
-            background-color: #2d3748;
-            color: #48bb78;
-            border-radius: 8px;
-            padding: 10px;
-            font-family: monospace;
-            font-size: 11px;
-            border: none;
-            resize: none;
-        }
+        /* カスタムスクロールバー */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        /* 選択時のアニメーション */
+        .selected-card { outline: 3px solid #14b8a6; background-color: #f0fdfa; transition: all 0.2s; }
+        .unselected-card { opacity: 0.6; filter: grayscale(80%); transition: all 0.2s; }
     </style>
 </head>
-<body>
+<body class="bg-slate-100 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
 
-    <div class="app-container">
-        <!-- ヘッダー -->
-        <div class="header">
-            <img src="logo.png" alt="PHOTOZAP" width="600" height="110" style="width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto;">
-        </div>
-
-        <div class="content">
-            
-            <!-- 画像選択エリア -->
-            <div class="section-box">
-                <label>📁 変換する画像を選択:</label><br>
-                
-                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 12px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">📱 スマホ・PC (写真を選択)</div>
-                    <input type="file" id="fileInput" multiple accept="image/jpeg, image/png, image/webp" style="margin-top: 0;">
-                </div>
-
-                <div style="margin-top: 10px; padding: 10px; background-color: #fff; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 12px; font-weight: bold; color: var(--text-dark); margin-bottom: 5px;">💻 PC専用 (フォルダごと選択できます)</div>
-                    <input type="file" id="folderInput" webkitdirectory directory multiple style="margin-top: 0;">
-                </div>
-
-                <div class="note" id="fileCountDisplay" style="margin-top: 15px; font-weight: bold; font-size: 13px; color: var(--primary);">未選択</div>
-            </div>
-
-            <!-- サイズ指定エリア -->
-            <div class="section-box">
-                <div class="section-title">
-                    <span>📐 サイズを指定する</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleSize">
-                        <span class="slider size-toggle"></span>
-                    </label>
-                </div>
-
-                <div id="sizeOptions" class="options-group disabled">
-                    <div class="radio-line">
-                        <input type="radio" name="sizeMode" value="longEdge" id="radioLongEdge" checked>
-                        <label for="radioLongEdge">長辺を合わせる (px):</label>
-                        <input type="number" id="longEdgeValue" value="1000">
-                    </div>
-                    <div class="radio-line">
-                        <input type="radio" name="sizeMode" value="percent" id="radioPercent">
-                        <label for="radioPercent">縮小率 (%):</label>
-                        <input type="number" id="percentValue" value="50" disabled>
-                    </div>
-                </div>
-            </div>
-
-            <!-- データ量指定エリア -->
-            <div class="section-box">
-                <div class="section-title">
-                    <span>🗜️ データ量を指定する</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="toggleData" checked>
-                        <span class="slider data-toggle"></span>
-                    </label>
-                </div>
-
-                <div id="dataOptions" class="options-group">
-                    <div class="radio-line">
-                        <label>目標サイズ (KB):</label>
-                        <input type="number" id="targetKbValue" value="200">
-                    </div>
-                    <div class="note">
-                        ※PNGは自動的に背景白のJPEGに変換されます。<br>
-                        ※指定サイズに収まらない場合は自動でピクセル数を削ります。
-                    </div>
-                </div>
-            </div>
-
-            <!-- 実行ボタン -->
-            <button id="startBtn" class="zap-btn">ZAP! (ZIPで一括保存)</button>
-            
-
-            <!-- プログレスバー -->
-            <div id="progressArea" class="progress-container">
-                <div class="progress-texts">
-                    <span id="statusText">準備中...</span>
-                    <span id="progressText">0%</span>
-                </div>
-                <div class="progress-bar-bg">
-                    <div id="progressBar" class="progress-bar-fill"></div>
-                </div>
-            </div>
-
-            <!-- ログ表示エリア -->
-            <div id="logArea" class="log-area">
-                <label style="font-size: 12px;">📝 処理ログ:</label><br>
-                <textarea id="logConsole" readonly></textarea>
-            </div>
-
-        </div>
-    </div>
-
-    <div style="margin-top: 15px; font-size: 12px; color: var(--text-gray);">
-        2026 ココサポートワークス
-    </div>
-
-    <script>
-        // --- 独自実装: 軽量・完全オフラインZIPジェネレーター ---
-        // 外部ライブラリを読み込めない環境のため、プログラム内でZIPファイル(無圧縮)を生成します。
-        class SimpleOfflineZip {
-            constructor() {
-                this.files = [];
-                this.crcTable = new Uint32Array(256);
-                for (let n = 0; n < 256; n++) {
-                    let c = n;
-                    for (let k = 0; k < 8; k++) { c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); }
-                    this.crcTable[n] = c;
-                }
-            }
-
-            crc32(uint8Array) {
-                let crc = 0xFFFFFFFF;
-                for (let i = 0; i < uint8Array.length; i++) {
-                    crc = (crc >>> 8) ^ this.crcTable[(crc ^ uint8Array[i]) & 0xFF];
-                }
-                return (crc ^ 0xFFFFFFFF) >>> 0;
-            }
-
-            addFile(name, uint8Array, date = new Date()) {
-                // ZIP(MS-DOS)形式のタイムスタンプに変換して保持
-                const dosTime = (date.getSeconds() >> 1) | (date.getMinutes() << 5) | (date.getHours() << 11);
-                const dosDate = date.getDate() | ((date.getMonth() + 1) << 5) | ((date.getFullYear() - 1980) << 9);
-                this.files.push({ name: name, data: uint8Array, dosTime: dosTime, dosDate: dosDate });
-            }
-
-            generateBlob() {
-                let zipData = [];
-                let centralDirectory = [];
-                let offset = 0;
-                const encoder = new TextEncoder(); // 日本語ファイル名対応(UTF-8)
-
-                for (const file of this.files) {
-                    const nameBytes = encoder.encode(file.name);
-                    const nameLen = nameBytes.length;
-                    const dataLen = file.data.length;
-                    const crc = this.crc32(file.data);
-
-                    // Local File Header
-                    const lfh = new Uint8Array(30 + nameLen);
-                    const lfhView = new DataView(lfh.buffer);
-                    lfhView.setUint32(0, 0x04034b50, true); // Signature
-                    lfhView.setUint16(4, 20, true);         // ★修正: Version needed (20 = MS-DOS 2.0)
-                    lfhView.setUint16(6, 0x0800, true);     // Flags (Bit 11 = UTF-8)
-                    lfhView.setUint16(8, 0, true);          // Compression (0 = Store)
-                    lfhView.setUint16(10, file.dosTime, true); // Last mod file time
-                    lfhView.setUint16(12, file.dosDate, true); // Last mod file date
-                    lfhView.setUint32(14, crc, true);       // CRC32
-                    lfhView.setUint32(18, dataLen, true);   // Comp size
-                    lfhView.setUint32(22, dataLen, true);   // Uncomp size
-                    lfhView.setUint16(26, nameLen, true);   // Name length
-                    lfh.set(nameBytes, 30);
-                    
-                    zipData.push(lfh);
-                    zipData.push(file.data);
-
-                    // Central Directory Header
-                    const cdh = new Uint8Array(46 + nameLen);
-                    const cdhView = new DataView(cdh.buffer);
-                    cdhView.setUint32(0, 0x02014b50, true); // Signature
-                    cdhView.setUint16(4, 20, true);         // ★修正: Version made by (20 = MS-DOS)
-                    cdhView.setUint16(6, 20, true);         // ★修正: Version needed
-                    cdhView.setUint16(8, 0x0800, true);     // Flags (Bit 11 = UTF-8)
-                    cdhView.setUint16(10, 0, true);         // Compression
-                    cdhView.setUint16(12, file.dosTime, true); // Last mod file time
-                    cdhView.setUint16(14, file.dosDate, true); // Last mod file date
-                    cdhView.setUint32(16, crc, true);       // CRC32
-                    cdhView.setUint32(20, dataLen, true);   // Comp size
-                    cdhView.setUint32(24, dataLen, true);   // Uncomp size
-                    cdhView.setUint16(28, nameLen, true);   // Name length
-                    cdhView.setUint32(38, 0x00000020, true); // ★追加: External file attributes (0x20 = 標準のアーカイブファイルとして認識させる)
-                    cdhView.setUint32(42, offset, true);    // Offset
-                    cdh.set(nameBytes, 46);
-
-                    centralDirectory.push(cdh);
-                    offset += lfh.length + dataLen;
-                }
-
-                const cdSize = centralDirectory.reduce((acc, val) => acc + val.length, 0);
-
-                // End of Central Directory Record
-                const eocd = new Uint8Array(22);
-                const eocdView = new DataView(eocd.buffer);
-                eocdView.setUint32(0, 0x06054b50, true); // Signature
-                eocdView.setUint16(8, this.files.length, true); // Total records
-                eocdView.setUint16(10, this.files.length, true); 
-                eocdView.setUint32(12, cdSize, true);    // CD Size
-                eocdView.setUint32(16, offset, true);    // CD Offset
-
-                return new Blob([...zipData, ...centralDirectory, eocd], { type: 'application/zip' });
-            }
-        }
-        // -----------------------------------------------------------
-
-        // UIの要素を取得
-        const toggleSize = document.getElementById('toggleSize');
-        const sizeOptions = document.getElementById('sizeOptions');
-        const radioLongEdge = document.getElementById('radioLongEdge');
-        const radioPercent = document.getElementById('radioPercent');
-        const longEdgeInput = document.getElementById('longEdgeValue');
-        const percentInput = document.getElementById('percentValue');
-
-        const toggleData = document.getElementById('toggleData');
-        const dataOptions = document.getElementById('dataOptions');
-        const targetKbValue = document.getElementById('targetKbValue');
-
-        const fileInput = document.getElementById('fileInput');
-        const folderInput = document.getElementById('folderInput');
-        const fileCountDisplay = document.getElementById('fileCountDisplay');
-
-        // トグルの動き
-        toggleSize.addEventListener('change', (e) => {
-            if(e.target.checked) sizeOptions.classList.remove('disabled');
-            else sizeOptions.classList.add('disabled');
-        });
-
-        toggleData.addEventListener('change', (e) => {
-            if(e.target.checked) dataOptions.classList.remove('disabled');
-            else dataOptions.classList.add('disabled');
-        });
-
-        // ラジオボタンの動き
-        const updateRadios = () => {
-            if (radioLongEdge.checked) {
-                longEdgeInput.disabled = false;
-                percentInput.disabled = true;
-            } else {
-                longEdgeInput.disabled = true;
-                percentInput.disabled = false;
-            }
-        };
-        radioLongEdge.addEventListener('change', updateRadios);
-        radioPercent.addEventListener('change', updateRadios);
-
-        // ファイル/フォルダ選択時の処理
-        let targetFiles = [];
+<!-- ヘルプモーダル（使い方） -->
+<div id="helpModal" class="hidden fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 backdrop-blur-sm">
+    <div class="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+        <button onclick="closeHelp()" class="absolute top-4 right-4 bg-gray-200 hover:bg-red-500 hover:text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-gray-600 transition-colors">&times;</button>
+        <h2 class="text-2xl font-bold mb-4 text-pink-500 border-b-2 border-pink-200 pb-2 flex items-center gap-2">
+            <span>💡</span> photoZAPの使い方
+        </h2>
         
-        function handleFileSelect(e) {
-            const files = Array.from(e.target.files);
-            const validExts = ['image/jpeg', 'image/png', 'image/webp'];
-            targetFiles = files.filter(file => validExts.includes(file.type));
-            fileCountDisplay.textContent = `JPEG/PNG/WebPファイル: ${targetFiles.length}枚 見つかりました`;
-        }
-
-        fileInput.addEventListener('change', (e) => {
-            folderInput.value = ""; // もう一方をリセット
-            handleFileSelect(e);
-        });
-
-        folderInput.addEventListener('change', (e) => {
-            fileInput.value = ""; // もう一方をリセット
-            handleFileSelect(e);
-        });
-
-        // ログ機能
-        const logConsole = document.getElementById('logConsole');
-        function addLog(message, isError = false) {
-            const time = new Date().toLocaleTimeString();
-            const prefix = isError ? "[ERROR]" : "[INFO]";
-            logConsole.value += `${time} ${prefix} ${message}\n`;
-            logConsole.scrollTop = logConsole.scrollHeight;
-        }
-
-        // --- コアの画像処理 ---
-        const startBtn = document.getElementById('startBtn');
-        const progressArea = document.getElementById('progressArea');
-        const logArea = document.getElementById('logArea');
-        const statusText = document.getElementById('statusText');
-        const progressText = document.getElementById('progressText');
-        const progressBar = document.getElementById('progressBar');
-
-        function readFileAsDataURL(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(e);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function loadImage(src) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.onerror = (e) => reject(e);
-                img.src = src;
-            });
-        }
-
-        function getBase64Size(base64Str) {
-            const str = base64Str.split(',')[1];
-            return atob(str).length;
-        }
-
-        function dataUrlToUint8Array(dataUrl) {
-            const base64Str = dataUrl.split(',')[1];
-            const binaryStr = atob(base64Str);
-            const len = binaryStr.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryStr.charCodeAt(i);
-            }
-            return bytes;
-        }
-
-        // 次のUI描画を待つための関数（フリーズ防止）
-        function yieldToMain() {
-            return new Promise(resolve => setTimeout(resolve, 0));
-        }
-
-        startBtn.addEventListener('click', async () => {
-            if (targetFiles.length === 0) {
-                alert("フォルダを選択してください。");
-                return;
-            }
-            if (!toggleSize.checked && !toggleData.checked) {
-                alert("サイズ指定かデータ量指定のどちらかを有効にしてください。");
-                return;
-            }
-
-            // 初期化
-            startBtn.disabled = true;
-            progressArea.style.display = 'block';
-            logArea.style.display = 'block';
-            logConsole.value = "";
-            addLog("=== PHOTOZAP 処理開始 ===");
-
-            let successCount = 0;
-            let errorCount = 0;
-
-            const useSize = toggleSize.checked;
-            const useData = toggleData.checked;
-            const isLongEdge = radioLongEdge.checked;
-            const longEdge = parseInt(longEdgeInput.value);
-            const percent = parseInt(percentInput.value) / 100;
-            const targetBytes = parseFloat(targetKbValue.value) * 1024;
-
-            // フォルダ名の取得（PCでの「フォルダごと選択」用）
-            let folderName = "";
-            if (targetFiles.length > 0 && targetFiles[0].webkitRelativePath) {
-                const parts = targetFiles[0].webkitRelativePath.split('/');
-                if (parts.length > 1) {
-                    folderName = parts[0]; // 最初のスラッシュより前の文字（＝フォルダ名）を取得
-                }
-            }
-
-            // ZIPジェネレーターを準備
-            const myZip = new SimpleOfflineZip();
-
-            for (let i = 0; i < targetFiles.length; i++) {
-                const file = targetFiles[i];
+        <div class="space-y-4 text-sm leading-relaxed">
+            <section>
+                <h3 class="font-bold text-lg text-gray-700">1. はじめに</h3>
+                <p>「photoZAP」は、写真のサイズ（縦横の長さ）やデータ量（KB/MB）を一括で小さくして保存するためのツールです。パソコンの内部だけで処理が完結するため、ネットに画像が漏れる心配はありません。</p>
+            </section>
+            
+            <section>
+                <h3 class="font-bold text-lg text-gray-700">2. 基本の使い方</h3>
+                <ol class="list-decimal pl-5 space-y-1">
+                    <li>左側のパネルで、変換したい画像（またはフォルダ）を選びます。</li>
+                    <li>右側に表示されるリストやサムネイルから、変換したいものにチェック（✅）を入れます。</li>
+                    <li>左側で、目標とするサイズやデータ量を設定します。</li>
+                    <li><span class="font-bold text-pink-500">ZAP! (変換開始)</span> ボタンを押すと処理が始まります。</li>
+                </ol>
+            </section>
+            
+            <section class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                <h3 class="font-bold text-red-700 flex items-center gap-1">⚠️ 重要：保存に関する注意と設定</h3>
+                <p class="mb-2 font-bold text-red-600">画像は「1枚ずつ」ブラウザの機能を使ってダウンロードされます。</p>
+                <p class="mb-2">画像1枚ごとに「どこに保存しますか？」と聞かれてしまう場合は、以下の手順でブラウザの設定を変更してください。</p>
                 
-                // UI更新
-                statusText.textContent = `${i + 1} / ${targetFiles.length} 枚目を処理中...`;
-                const progress = Math.round(((i) / targetFiles.length) * 100);
-                progressBar.style.width = `${progress}%`;
-                progressText.textContent = `${progress}%`;
-                await yieldToMain(); // 画面を更新させる
+                <div class="grid md:grid-cols-2 gap-4 mt-2">
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <h4 class="font-bold text-blue-700 mb-1 border-b">🌐 Edge の場合</h4>
+                        <ul class="list-disc pl-4 text-xs space-y-1 text-gray-600">
+                            <li>右上の「…」から「設定」を開く</li>
+                            <li>左メニュー「ダウンロード」を選ぶ</li>
+                            <li>「各ファイルの保存先を毎回確認する」を <span class="font-bold text-red-500">オフ</span> にする</li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-3 rounded border shadow-sm">
+                        <h4 class="font-bold text-green-700 mb-1 border-b">🌐 Chrome の場合</h4>
+                        <ul class="list-disc pl-4 text-xs space-y-1 text-gray-600">
+                            <li>右上の「⋮」から「設定」を開く</li>
+                            <li>左メニュー「ダウンロード」を選ぶ</li>
+                            <li>「ダウンロード前に各ファイルの保存場所を確認する」を <span class="font-bold text-red-500">オフ</span> にする</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
 
-                try {
-                    const dataUrl = await readFileAsDataURL(file);
-                    let img = await loadImage(dataUrl);
-                    
-                    let canvas = document.createElement('canvas');
-                    let ctx = canvas.getContext('2d');
-                    
-                    let w = img.width;
-                    let h = img.height;
+            <section>
+                <h3 class="font-bold text-lg text-gray-700">4. 保存後のファイル名について</h3>
+                <p>変換された画像は、見分けがつくようにファイル名の先頭に <span class="bg-gray-200 px-1 rounded font-mono">ZAP_</span> が付きます。</p>
+            </section>
 
-                    // 1. サイズ変更
-                    if (useSize) {
-                        if (isLongEdge) {
-                            if (w > h) {
-                                h = Math.round(h * (longEdge / w));
-                                w = longEdge;
-                            } else {
-                                w = Math.round(w * (longEdge / h));
-                                h = longEdge;
-                            }
-                        } else {
-                            w = Math.round(w * percent);
-                            h = Math.round(h * percent);
-                        }
-                    }
+            <section class="bg-blue-50 p-3 rounded text-blue-800 font-bold text-center border border-blue-200">
+                ✔️ 作業が終わりphotoZAPを終了する際は、セキュリティや利便性のため、上記で変更したブラウザの設定を「元に戻しておくこと」を推奨します。
+            </section>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <button onclick="closeHelp()" class="bg-gray-800 hover:bg-gray-900 text-white font-bold py-2 px-8 rounded-full shadow-lg">閉じる</button>
+        </div>
+    </div>
+</div>
 
-                    canvas.width = w;
-                    canvas.height = h;
+<!-- 画像プレビュー（拡大）モーダル -->
+<div id="previewModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col justify-center items-center p-2 backdrop-blur-sm" onclick="closePreview()">
+    <div class="text-white mb-2 font-bold text-lg flex justify-between w-full max-w-4xl px-4">
+        <span id="previewTitle">プレビュー</span>
+        <button class="bg-white text-black rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors">&times;</button>
+    </div>
+    <img id="previewImage" src="" alt="preview" class="max-w-full max-h-[85vh] object-contain rounded shadow-2xl border-2 border-gray-700" onclick="event.stopPropagation()">
+</div>
 
-                    // 形式決定
-                    let outFormat = file.type;
-                    let outExt = file.name.substring(file.name.lastIndexOf('.'));
-                    
-                    if (useData && (file.type === 'image/png' || file.type === 'image/webp')) {
-                        outFormat = 'image/jpeg';
-                        outExt = '.jpg';
-                    }
-
-                    if (outFormat === 'image/jpeg') {
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, w, h);
-                    }
-                    ctx.drawImage(img, 0, 0, w, h);
-
-                    let finalDataUrl;
-
-                    // 2. データ量指定（圧縮）
-                    if (useData) {
-                        let quality = 0.95;
-                        while (true) {
-                            finalDataUrl = canvas.toDataURL(outFormat, quality);
-                            let currentSize = getBase64Size(finalDataUrl);
-
-                            if (currentSize <= targetBytes || quality <= 0.1) {
-                                if (currentSize > targetBytes) {
-                                    // フェイルセーフ：ピクセル数を10%削る
-                                    if (canvas.width < 10 || canvas.height < 10) throw new Error("限界まで縮小しました");
-                                    
-                                    let newW = Math.floor(canvas.width * 0.9);
-                                    let newH = Math.floor(canvas.height * 0.9);
-                                    let tempCanvas = document.createElement('canvas');
-                                    tempCanvas.width = newW;
-                                    tempCanvas.height = newH;
-                                    let tempCtx = tempCanvas.getContext('2d');
-                                    
-                                    if (outFormat === 'image/jpeg') {
-                                        tempCtx.fillStyle = '#FFFFFF';
-                                        tempCtx.fillRect(0, 0, newW, newH);
-                                    }
-                                    tempCtx.drawImage(canvas, 0, 0, newW, newH);
-                                    canvas = tempCanvas;
-                                    quality = 0.85; 
-                                    continue;
-                                } else {
-                                    break;
-                                }
-                            }
-                            quality -= 0.05;
-                        }
-                    } else {
-                        finalDataUrl = canvas.toDataURL(outFormat, 0.92);
-                    }
-
-                    // ファイル名の設定
-                    let fileName = file.name;
-                    if (outExt !== file.name.substring(file.name.lastIndexOf('.'))) {
-                        fileName = file.name.substring(0, file.name.lastIndexOf('.')) + outExt;
-                    }
-
-                    // ZIPにファイルを追加（★元のファイルの更新日時を引き継ぐ）
-                    const fileBytes = dataUrlToUint8Array(finalDataUrl);
-                    myZip.addFile(fileName, fileBytes, new Date(file.lastModified));
-                    
-                    successCount++;
-                    addLog(`[成功] ${fileName} をZIPに追加しました`);
-
-                } catch (error) {
-                    errorCount++;
-                    addLog(`[エラー] ${file.name}: ${error.message}`, true);
-                }
-            }
-
-            // 全処理完了後、ZIPを作成して1回だけダウンロード
-            statusText.textContent = "ZIPファイルを作成中...";
-            progressBar.style.width = `99%`;
-            progressText.textContent = `99%`;
-            await yieldToMain();
-
-            try {
-                const zipBlob = myZip.generateBlob();
-                const downloadLink = document.createElement('a');
-                downloadLink.href = URL.createObjectURL(zipBlob);
-                
-                // ZIPファイル名の決定（パターンA or パターンB）
-                let zipFileName = "";
-                if (folderName) {
-                    // パターンA: フォルダごと選択した場合は「フォルダ名_photoZAP.zip」
-                    zipFileName = `${folderName}_photoZAP.zip`;
-                } else {
-                    // パターンB: 写真のみ選択した場合は日時（今まで通り）
-                    const now = new Date();
-                    const yyyy = now.getFullYear();
-                    const MM = String(now.getMonth() + 1).padStart(2, '0');
-                    const dd = String(now.getDate()).padStart(2, '0');
-                    const HH = String(now.getHours()).padStart(2, '0');
-                    const mm = String(now.getMinutes()).padStart(2, '0');
-                    const ss = String(now.getSeconds()).padStart(2, '0');
-                    zipFileName = `photoZAP_${yyyy}${MM}${dd}_${HH}-${mm}-${ss}.zip`;
-                }
-                
-                downloadLink.download = zipFileName;
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-                
-                progressBar.style.width = `100%`;
-                progressText.textContent = `100%`;
-                statusText.textContent = "処理完了！ZIPファイルをダウンロードしました。";
-                addLog("=== 処理完了 ===");
-                addLog(`成功: ${successCount} 件, 失敗: ${errorCount} 件`);
-                
-                if (errorCount > 0) {
-                    alert(`完了しましたが、${errorCount}件のエラーがあります。ログを確認してください。`);
-                } else {
-                    alert(`完了しました！画像はZIPファイルにまとめられてダウンロードされました。`);
-                }
-            } catch (e) {
-                statusText.textContent = "ZIPファイルの作成に失敗しました。";
-                addLog(`[重大なエラー] ZIP作成失敗: ${e.message}`, true);
-            }
-
-            startBtn.disabled = false;
-        });
-    </script>
+<!-- メインコンテンツ (2カラムレイアウト) -->
+<div class="flex-1 w-full max-w-[1600px] mx-auto p-3 flex flex-col md:flex-row gap-4 h-full overflow-hidden">
     
+    <!-- ================= 左カラム：操作パネル ================= -->
+    <div class="w-full md:w-[360px] lg:w-[420px] flex flex-col gap-3 bg-white p-4 rounded-xl shadow-md overflow-y-auto shrink-0 border-t-4 border-pink-400">
+        
+        <!-- タイトルロゴ -->
+        <div class="text-center mb-1">
+             <img src="logo.png" alt="photoZAP" class="max-h-16 mx-auto object-contain fallback-text" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+             <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-orange-400 hidden drop-shadow-sm">photoZAP</h1>
+        </div>
+        
+        <!-- ヘルプボタン -->
+        <button onclick="openHelp()" class="bg-gradient-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 text-blue-700 py-1.5 px-4 rounded-full font-bold text-sm mx-auto shadow-sm border border-blue-200 transition-all flex items-center gap-1">
+            <span>💡</span> photoZAPの使い方 (必読)
+        </button>
+
+        <!-- 入力エリア -->
+        <div class="mb-1">
+            <label class="font-bold text-base flex items-center gap-1 text-gray-800 mb-2">📁 変換する画像を選択:</label>
+            
+            <div class="border border-gray-200 p-3 rounded-lg bg-white shadow-sm mb-2">
+                <div class="font-bold text-sm text-gray-800 mb-2 flex items-center gap-1">📱 スマホ・PC (写真を選択)</div>
+                <input type="file" id="fileInput" multiple accept="image/*" class="w-full text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-gray-200 file:text-gray-800 hover:file:bg-gray-300 cursor-pointer">
+            </div>
+
+            <div class="border border-gray-200 p-3 rounded-lg bg-white shadow-sm">
+                <div class="font-bold text-sm text-gray-800 mb-2 flex items-center gap-1">💻 PC専用 (フォルダごと選択)</div>
+                <input type="file" id="folderInput" webkitdirectory directory class="w-full text-sm text-gray-600 file:mr-2 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-sm file:bg-gray-200 file:text-gray-800 hover:file:bg-gray-300 cursor-pointer">
+            </div>
+        </div>
+
+        <!-- サイズ指定エリア -->
+        <div class="border border-gray-200 p-2.5 rounded-lg bg-slate-50 shadow-inner">
+            <div class="flex items-center gap-2 mb-1.5">
+                <input type="checkbox" id="useSize" class="w-4 h-4 accent-teal-500 cursor-pointer" onchange="toggleInputs()">
+                <label for="useSize" class="font-bold text-sm text-gray-700 cursor-pointer">📐 サイズ（ピクセル）を指定する</label>
+            </div>
+            <div id="sizeInputs" class="pl-6 flex flex-col gap-1.5 text-sm transition-opacity opacity-50 pointer-events-none">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="sizeMode" value="longEdge" checked class="accent-teal-500" onchange="toggleSizeMode()"> 
+                    <span class="w-20">長辺(px):</span>
+                    <input type="number" id="longEdgeVal" value="1000" class="w-20 border rounded px-1.5 py-0.5 focus:ring-2 focus:ring-teal-200 outline-none">
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="sizeMode" value="percent" class="accent-teal-500" onchange="toggleSizeMode()"> 
+                    <span class="w-20">縮小率(%):</span>
+                    <input type="number" id="percentVal" value="50" class="w-20 border rounded px-1.5 py-0.5 focus:ring-2 focus:ring-teal-200 outline-none" disabled>
+                </label>
+            </div>
+        </div>
+
+        <!-- データ量指定エリア -->
+        <div class="border border-gray-200 p-2.5 rounded-lg bg-slate-50 shadow-inner">
+            <div class="flex items-center gap-2 mb-1.5">
+                <input type="checkbox" id="useData" checked class="w-4 h-4 accent-pink-500 cursor-pointer" onchange="toggleInputs()">
+                <label for="useData" class="font-bold text-sm text-gray-700 cursor-pointer">🗜️ データ量を指定する</label>
+            </div>
+            <div id="dataInputs" class="pl-6 text-sm flex flex-col gap-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="w-28 text-gray-700">目標サイズ(KB):</span>
+                    <input type="number" id="targetKb" value="1000" class="w-24 border border-pink-300 rounded px-1.5 py-0.5 font-bold text-pink-600 focus:ring-2 focus:ring-pink-200 outline-none">
+                </div>
+                <div class="flex gap-1.5 mt-0.5">
+                    <button onclick="setTargetKb(200)" class="flex-1 bg-white border border-gray-300 hover:bg-gray-100 hover:border-pink-400 py-1 rounded text-xs font-bold text-gray-600 transition-colors">200KB</button>
+                    <button onclick="setTargetKb(500)" class="flex-1 bg-white border border-gray-300 hover:bg-gray-100 hover:border-pink-400 py-1 rounded text-xs font-bold text-gray-600 transition-colors">500KB</button>
+                    <button onclick="setTargetKb(1000)" class="flex-1 bg-white border border-gray-300 hover:bg-gray-100 hover:border-pink-400 py-1 rounded text-xs font-bold text-gray-600 transition-colors">1MB(1000)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- スペーサー -->
+        <div class="flex-grow"></div>
+
+        <!-- 実行ボタン・ログ -->
+        <div class="mt-auto flex flex-col gap-2">
+            <button id="zapBtn" onclick="startZap()" class="bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-black py-3.5 rounded-xl text-xl shadow-[0_4px_14px_0_rgba(244,63,94,0.39)] transition-transform transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none">
+                ⚡ ZAP! (変換開始) ⚡
+            </button>
+            <p class="text-[11px] text-center text-gray-500 leading-tight">
+                ※ブラウザで設定された「ダウンロード先<br>（通常はダウンロードフォルダ）」に保存されます。
+            </p>
+
+            <div id="progressArea" class="hidden flex-col gap-1.5 mt-1 bg-slate-50 p-2 rounded-lg border">
+                <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div id="progressBar" class="bg-gradient-to-r from-teal-400 to-emerald-400 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <div id="statusText" class="text-xs text-center font-bold text-gray-600">待機中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 右カラム：プレビューパネル ================= -->
+    <div class="flex-1 flex flex-col bg-white rounded-xl shadow-md overflow-hidden border-t-4 border-teal-400">
+        
+        <!-- 上部コントロール -->
+        <div class="flex flex-col sm:flex-row justify-between items-center p-3 border-b bg-slate-50 gap-2 shrink-0">
+            <div class="flex gap-2">
+                <button onclick="selectAll()" class="bg-white border border-teal-500 text-teal-600 hover:bg-teal-50 hover:text-teal-700 font-bold text-xs px-3 py-1.5 rounded shadow-sm transition-colors flex items-center gap-1">
+                    <span class="text-sm">✅</span> すべて選択
+                </button>
+                <button onclick="deselectAll()" class="bg-white border border-gray-400 text-gray-600 hover:bg-gray-100 font-bold text-xs px-3 py-1.5 rounded shadow-sm transition-colors flex items-center gap-1">
+                    <span class="text-sm">🔲</span> すべて解除
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-3 text-xs font-bold bg-white border px-3 py-1.5 rounded shadow-sm">
+                <span class="text-gray-500">表示形式:</span>
+                <label class="flex items-center gap-1 cursor-pointer hover:text-teal-600">
+                    <input type="radio" name="viewMode" value="thumbnail" checked onchange="toggleViewMode()" class="accent-teal-500 cursor-pointer w-3.5 h-3.5">
+                    <span>サムネイル</span>
+                </label>
+                <label class="flex items-center gap-1 cursor-pointer hover:text-teal-600" title="画像が多い場合にメモリを節約し、クラッシュを防ぎます">
+                    <input type="radio" name="viewMode" value="list" onchange="toggleViewMode()" class="accent-teal-500 cursor-pointer w-3.5 h-3.5">
+                    <span>リスト(軽量) ⚡</span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="px-4 py-1.5 bg-white text-xs font-bold text-gray-500 flex justify-between items-center shrink-0 border-b">
+            <span id="selectionStatus">0 枚中、0 枚を選択中</span>
+            <span id="safetyMsg" class="hidden text-pink-500 bg-pink-50 px-2 py-0.5 rounded">※50枚以上のため自動でリスト表示にしました</span>
+        </div>
+
+        <!-- サムネイル / リスト 表示コンテナ -->
+        <div id="previewContainer" class="flex-1 overflow-y-auto p-3 bg-slate-100 relative">
+            <div id="emptyMessage" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
+                <div class="text-6xl mb-2">📁</div>
+                <p class="font-bold">画像を選択するとここに表示されます</p>
+                <p class="text-xs mt-1">「リスト(軽量)」モードなら、1000枚でもサクサク動きます</p>
+            </div>
+            <!-- コンテンツはJSで生成 -->
+            <div id="gridContainer" class="hidden grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3"></div>
+            <div id="listContainer" class="hidden flex-col gap-1"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// === UI 制御系 ===
+function openHelp() { document.getElementById('helpModal').classList.remove('hidden'); }
+function closeHelp() { document.getElementById('helpModal').classList.add('hidden'); }
+function setTargetKb(val) { document.getElementById('targetKb').value = val; }
+
+function toggleInputs() {
+    const useSize = document.getElementById('useSize').checked;
+    const useData = document.getElementById('useData').checked;
+    
+    const sizeDiv = document.getElementById('sizeInputs');
+    if(useSize) {
+        sizeDiv.classList.remove('opacity-50', 'pointer-events-none');
+    } else {
+        sizeDiv.classList.add('opacity-50', 'pointer-events-none');
+    }
+    
+    const dataDiv = document.getElementById('dataInputs');
+    if(useData) {
+        dataDiv.classList.remove('opacity-50', 'pointer-events-none');
+    } else {
+        dataDiv.classList.add('opacity-50', 'pointer-events-none');
+    }
+}
+
+function toggleSizeMode() {
+    const mode = document.querySelector('input[name="sizeMode"]:checked').value;
+    document.getElementById('longEdgeVal').disabled = (mode !== 'longEdge');
+    document.getElementById('percentVal').disabled = (mode !== 'percent');
+}
+
+// === データ管理 ===
+let imageFiles = []; // { id, file, selected, sizeKb, w, h, name }
+let currentViewMode = 'thumbnail'; // 'thumbnail' or 'list'
+
+// ファイル入力の監視
+document.getElementById('fileInput').addEventListener('change', handleFiles);
+document.getElementById('folderInput').addEventListener('change', handleFiles);
+
+async function handleFiles(e) {
+    const files = Array.from(e.target.files);
+    if(files.length === 0) return;
+
+    document.getElementById('emptyMessage').style.display = 'none';
+    
+    // 隠しファイル（.で始まる）を除外し、画像のみ抽出
+    const validFiles = files.filter(f => f.type.startsWith('image/') && !f.name.startsWith('.'));
+    
+    if(validFiles.length === 0) {
+        alert("有効な画像ファイルが見つかりませんでした。\n（※隠しファイルは自動で除外されます）");
+        return;
+    }
+
+    // 初期化
+    imageFiles = validFiles.map((file, idx) => ({
+        id: idx,
+        file: file,
+        selected: true,
+        name: file.name,
+        sizeKb: (file.size / 1024).toFixed(1),
+        w: '-',
+        h: '-'
+    }));
+
+    // セーフティ機能：50枚以上なら自動的にリスト表示にする
+    const safetyMsg = document.getElementById('safetyMsg');
+    if(imageFiles.length >= 50) {
+        document.querySelector('input[value="list"]').checked = true;
+        currentViewMode = 'list';
+        safetyMsg.classList.remove('hidden');
+    } else {
+        safetyMsg.classList.add('hidden');
+    }
+
+    updateSelectionStatus();
+    renderPreviews();
+    
+    // 裏で非同期に画像の寸法(px)を計測してUIを更新（1枚ずつゆっくり測りメモリを防ぐ）
+    measureDimensions();
+    
+    // 処理後に入力をリセット（同じフォルダを再度選べるように）
+    e.target.value = '';
+}
+
+// 画像の寸法をバックグラウンドで計測
+async function measureDimensions() {
+    for (let i = 0; i < imageFiles.length; i++) {
+        if(currentViewMode === 'list' && i > 100) {
+            // リストモードで100枚超えていたら、裏での計測をスキップして軽くする（運用判断）
+            continue;
+        }
+        const item = imageFiles[i];
+        try {
+            const dims = await getImageDimensions(item.file);
+            item.w = dims.w;
+            item.h = dims.h;
+            // UI上のテキストを更新
+            const dimSpan = document.getElementById(`dim-${item.id}`);
+            if (dimSpan) dimSpan.textContent = `${item.w}×${item.h}`;
+        } catch(e) {}
+    }
+}
+
+function getImageDimensions(file) {
+    return new Promise(resolve => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+            resolve({w: img.width, h: img.height});
+            URL.revokeObjectURL(url);
+        };
+        img.onerror = () => {
+            resolve({w: '-', h: '-'});
+            URL.revokeObjectURL(url);
+        };
+        img.src = url;
+    });
+}
+
+// === 表示モードとレンダリング ===
+function toggleViewMode() {
+    currentViewMode = document.querySelector('input[name="viewMode"]:checked').value;
+    renderPreviews();
+}
+
+function renderPreviews() {
+    const grid = document.getElementById('gridContainer');
+    const list = document.getElementById('listContainer');
+    
+    grid.innerHTML = '';
+    list.innerHTML = '';
+    
+    if (currentViewMode === 'thumbnail') {
+        grid.style.display = 'grid';
+        list.style.display = 'none';
+        
+        // メモリ対策のため、サムネイルモードで100枚以上の場合は警告
+        if(imageFiles.length > 100) {
+            const warn = document.createElement('div');
+            warn.className = 'col-span-full bg-red-100 text-red-700 p-2 rounded text-center text-sm font-bold mb-2';
+            warn.textContent = '⚠️ 大量の画像をサムネイル表示するとブラウザが重くなる場合があります。動作が遅い場合は「リスト表示」に切り替えてください。';
+            grid.appendChild(warn);
+        }
+
+        imageFiles.forEach(item => {
+            const card = document.createElement('div');
+            card.id = `card-${item.id}`;
+            card.className = `relative rounded-lg overflow-hidden border-2 cursor-pointer shadow-sm flex flex-col bg-white ${item.selected ? 'selected-card border-teal-500' : 'unselected-card border-gray-300'}`;
+            card.onclick = () => toggleSelection(item.id);
+            
+            // サムネイル画像の生成（重い処理）
+            const imgUrl = URL.createObjectURL(item.file);
+            
+            card.innerHTML = `
+                <div class="h-32 bg-gray-200 w-full relative">
+                    <img src="${imgUrl}" class="w-full h-full object-cover" onload="window.URL.revokeObjectURL(this.src)">
+                    <div class="absolute top-2 left-2 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow">
+                        <input type="checkbox" class="w-4 h-4 accent-teal-500 pointer-events-none" ${item.selected ? 'checked' : ''}>
+                    </div>
+                    <button onclick="event.stopPropagation(); openPreviewModal(${item.id})" class="absolute top-2 right-2 bg-white/90 hover:bg-white text-black rounded-full w-7 h-7 flex items-center justify-center shadow-md transition-colors text-xs border border-gray-200" title="拡大表示">
+                        🔍
+                    </button>
+                </div>
+                <div class="p-2 bg-gray-800 text-white text-[10px] leading-tight flex-1 flex flex-col justify-between">
+                    <div class="truncate font-bold mb-1" title="${item.name}">${item.name}</div>
+                    <div class="flex justify-between text-gray-300">
+                        <span id="dim-${item.id}">${item.w}×${item.h}</span>
+                        <span>${item.sizeKb} KB</span>
+                    </div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+
+    } else {
+        // リスト（軽量）モード
+        grid.style.display = 'none';
+        list.style.display = 'flex';
+        
+        imageFiles.forEach(item => {
+            const row = document.createElement('div');
+            row.id = `row-${item.id}`;
+            row.className = `flex items-center justify-between p-2 rounded border cursor-pointer ${item.selected ? 'bg-teal-50 border-teal-300' : 'bg-white border-gray-200 opacity-60'}`;
+            
+            row.innerHTML = `
+                <div class="flex items-center gap-3 flex-1 overflow-hidden" onclick="toggleSelection(${item.id})">
+                    <input type="checkbox" class="w-4 h-4 accent-teal-500 pointer-events-none" ${item.selected ? 'checked' : ''}>
+                    <div class="truncate font-bold text-sm flex-1 text-gray-800" title="${item.name}">${item.name}</div>
+                    <div class="text-xs text-gray-500 w-24 text-right hidden sm:block" id="dim-${item.id}">${item.w}×${item.h}</div>
+                    <div class="text-xs font-mono text-gray-600 w-20 text-right">${item.sizeKb} KB</div>
+                </div>
+                <button onclick="event.stopPropagation(); openPreviewModal(${item.id})" class="ml-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded p-1.5 text-xs transition-colors" title="拡大表示">
+                    🔍
+                </button>
+            `;
+            list.appendChild(row);
+        });
+    }
+}
+
+// プレビューモーダル制御
+function openPreviewModal(id) {
+    const item = imageFiles.find(f => f.id === id);
+    if(!item) return;
+    
+    document.getElementById('previewTitle').textContent = item.name;
+    const img = document.getElementById('previewImage');
+    img.src = URL.createObjectURL(item.file);
+    document.getElementById('previewModal').classList.remove('hidden');
+}
+
+function closePreview() {
+    const img = document.getElementById('previewImage');
+    URL.revokeObjectURL(img.src);
+    img.src = '';
+    document.getElementById('previewModal').classList.add('hidden');
+}
+
+// === 選択・解除 制御 ===
+function toggleSelection(id) {
+    const item = imageFiles.find(f => f.id === id);
+    if(item) {
+        item.selected = !item.selected;
+        updateSelectionUI(id, item.selected);
+        updateSelectionStatus();
+    }
+}
+
+function selectAll() {
+    imageFiles.forEach(item => {
+        if(!item.selected) {
+            item.selected = true;
+            updateSelectionUI(item.id, true);
+        }
+    });
+    updateSelectionStatus();
+}
+
+function deselectAll() {
+    imageFiles.forEach(item => {
+        if(item.selected) {
+            item.selected = false;
+            updateSelectionUI(item.id, false);
+        }
+    });
+    updateSelectionStatus();
+}
+
+function updateSelectionUI(id, isSelected) {
+    // 現在のモードに合わせてUIの見た目だけを更新（再レンダリングしないので軽い）
+    if (currentViewMode === 'thumbnail') {
+        const card = document.getElementById(`card-${id}`);
+        if(card) {
+            card.className = `relative rounded-lg overflow-hidden border-2 cursor-pointer shadow-sm flex flex-col bg-white ${isSelected ? 'selected-card border-teal-500' : 'unselected-card border-gray-300'}`;
+            const cb = card.querySelector('input[type="checkbox"]');
+            if(cb) cb.checked = isSelected;
+        }
+    } else {
+        const row = document.getElementById(`row-${id}`);
+        if(row) {
+            row.className = `flex items-center justify-between p-2 rounded border cursor-pointer ${isSelected ? 'bg-teal-50 border-teal-300' : 'bg-white border-gray-200 opacity-60'}`;
+            const cb = row.querySelector('input[type="checkbox"]');
+            if(cb) cb.checked = isSelected;
+        }
+    }
+}
+
+function updateSelectionStatus() {
+    const selectedCount = imageFiles.filter(item => item.selected).length;
+    document.getElementById('selectionStatus').innerHTML = `<span class="text-teal-600 font-extrabold text-sm">${selectedCount}</span> <span class="font-normal text-gray-500">/ ${imageFiles.length} 枚を選択中</span>`;
+}
+
+
+// === 変換処理 (ZAP) ===
+async function startZap() {
+    const targets = imageFiles.filter(item => item.selected);
+    if (targets.length === 0) {
+        alert("変換する画像が選択されていません。");
+        return;
+    }
+
+    const useSize = document.getElementById('useSize').checked;
+    const useData = document.getElementById('useData').checked;
+    
+    if (!useSize && !useData) {
+        alert("サイズ指定かデータ量指定のどちらかを有効にしてください。");
+        return;
+    }
+
+    // UIブロック
+    const btn = document.getElementById('zapBtn');
+    btn.disabled = true;
+    btn.textContent = '⏳ 処理中...';
+    document.getElementById('progressArea').style.display = 'flex';
+    const progressBar = document.getElementById('progressBar');
+    const statusText = document.getElementById('statusText');
+
+    let successCount = 0;
+    
+    for (let i = 0; i < targets.length; i++) {
+        const target = targets[i];
+        statusText.textContent = `${i + 1} / ${targets.length} 枚を処理中... (${target.name})`;
+        progressBar.style.width = `${((i + 1) / targets.length) * 100}%`;
+        
+        try {
+            await processSingleImage(target.file, useSize, useData);
+            successCount++;
+            
+            // 【重要】ブラウザの「複数ファイルのダウンロード警告」を回避するための意図的な待機
+            // 人間が保存するペースに近づけることでブロックされにくくする
+            if (i < targets.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 600)); // 0.6秒待機
+            }
+        } catch (e) {
+            console.error(`Error processing ${target.name}:`, e);
+        }
+    }
+
+    // 処理完了
+    btn.disabled = false;
+    btn.textContent = '⚡ ZAP! (変換開始) ⚡';
+    statusText.textContent = `完了！ (成功: ${successCount} 枚)`;
+    progressBar.style.width = '100%';
+    
+    setTimeout(() => {
+        alert(`処理が完了しました！\n\n成功: ${successCount} 枚\n\n※ブラウザで指定されているダウンロード先に保存されています。`);
+        document.getElementById('progressArea').style.display = 'none';
+    }, 500);
+}
+
+// 1枚の画像を処理（メモリリークを防ぐバイナリ処理）
+function processSingleImage(file, useSize, useData) {
+    return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        
+        img.onload = () => {
+            URL.revokeObjectURL(url); // 読み込んだらすぐ解放
+            
+            const canvas = document.createElement('canvas');
+            let w = img.width;
+            let h = img.height;
+
+            // 1. サイズ指定処理
+            if (useSize) {
+                const sizeMode = document.querySelector('input[name="sizeMode"]:checked').value;
+                if (sizeMode === 'longEdge') {
+                    const targetEdge = parseInt(document.getElementById('longEdgeVal').value, 10);
+                    if (w > h) {
+                        h = Math.round(h * (targetEdge / w));
+                        w = targetEdge;
+                    } else {
+                        w = Math.round(w * (targetEdge / h));
+                        h = targetEdge;
+                    }
+                } else {
+                    const scale = parseInt(document.getElementById('percentVal').value, 10) / 100;
+                    w = Math.round(w * scale);
+                    h = Math.round(h * scale);
+                }
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            
+            // PNG透過対策（背景白塗り）
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(img, 0, 0, w, h);
+
+            let quality = 0.95;
+            let targetBytes = Infinity;
+            if (useData) {
+                targetBytes = parseFloat(document.getElementById('targetKb').value) * 1024;
+            }
+
+            // 圧縮ループ
+            const attemptCompress = () => {
+                canvas.toBlob((blob) => {
+                    if (!blob) return reject("Blob creation failed");
+                    
+                    if (useData && blob.size > targetBytes && quality > 0.1) {
+                        quality -= 0.1; // 画質を下げて再帰
+                        attemptCompress();
+                    } else {
+                        // 保存処理
+                        downloadBlob(blob, `ZAP_${file.name.replace(/\.[^/.]+$/, "")}.jpg`);
+                        
+                        // Canvasのメモリ解放
+                        canvas.width = 0; 
+                        canvas.height = 0;
+                        resolve();
+                    }
+                }, 'image/jpeg', quality);
+            };
+            
+            attemptCompress();
+        };
+        
+        img.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject("Image load error");
+        };
+        
+        img.src = url;
+    });
+}
+
+// Blobをダウンロード
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    // ダウンロード後、少し待ってからメモリ解放
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// 初期化
+toggleInputs();
+</script>
 </body>
 </html>
